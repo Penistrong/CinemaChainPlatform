@@ -1,0 +1,585 @@
+body {
+    /* Learn from
+       *     TypeIsBeautiful,
+       *     [This Post](http://zhuanlan.zhihu.com/ibuick/20186806) etc.
+       */
+    font-family: -apple-system, "Helvetica Neue", "Arial", "PingFang SC", "Hiragino Sans GB", "STHeiti", "Microsoft YaHei", "Microsoft JhengHei", "Source Han Sans SC", "Noto Sans CJK SC", "Source Han Sans CN", "Noto Sans SC", "Source Han Sans TC", "Noto Sans CJK TC", "WenQuanYi Micro Hei", SimSun, sans-serif;
+    line-height: 1.7;
+    font-size: 16px;
+    color: #404040;
+    overflow-x: hidden;
+}
+/* StyleSheet navbar start */
+@media only screen and (max-width: 767px) {
+    .navbar-default .navbar-collapse {
+        border: none;
+        background: white;
+        box-shadow: 0px 5px 10px 2px rgba(0, 0, 0, 0.2);
+        box-shadow: rgba(0, 0, 0, 0.117647) 0px 1px 6px, rgba(0, 0, 0, 0.239216) 0px 1px 4px;
+        border-radius: 2px;
+        width: 170px;
+        float: right;
+        margin: 0px;
+    }
+    #ccp_navbar {
+        opacity: 0;
+        transform: scaleX(0);
+        transform-origin: top right;
+        transition: all 0.25s cubic-bezier(0.23, 1, 0.32, 1);
+        -webkit-transform: scaleX(0);
+        -webkit-transform-origin: top right;
+        -webkit-transition: all 0.25s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    #ccp_navbar a {
+        font-size: 13px;
+        line-height: 28px;
+    }
+    #ccp_navbar .navbar-collapse {
+        height: 0px;
+        transform: scaleY(0);
+        transform-origin: top right;
+        transition: transform 500ms cubic-bezier(0.23, 1, 0.32, 1);
+        -webkit-transform: scaleY(0);
+        -webkit-transform-origin: top right;
+        -webkit-transition: -webkit-transform 500ms cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    #ccp_navbar li {
+        opacity: 0;
+        transition: opacity 450ms cubic-bezier(0.23, 1, 0.32, 1) 205ms;
+        -webkit-transition: opacity 450ms cubic-bezier(0.23, 1, 0.32, 1) 205ms;
+    }
+    #ccp_navbar.in {
+        transform: scaleX(1);
+        -webkit-transform: scaleX(1);
+        opacity: 1;
+    }
+    #ccp_navbar.in .navbar-collapse {
+        transform: scaleY(1);
+        -webkit-transform: scaleY(1);
+    }
+    #ccp_navbar.in li {
+        opacity: 1;
+    }
+}
+.navbar-custom {
+    background: none;
+    border: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 3;
+    /* Hux learn from
+       *     TypeIsBeautiful,
+       *     [This Post](http://zhuanlan.zhihu.com/ibuick/20186806) etc.
+       */
+    font-family: -apple-system, "Helvetica Neue", "Arial", "PingFang SC", "Hiragino Sans GB", "STHeiti", "Microsoft YaHei", "Microsoft JhengHei", "Source Han Sans SC", "Noto Sans CJK SC", "Source Han Sans CN", "Noto Sans SC", "Source Han Sans TC", "Noto Sans CJK TC", "WenQuanYi Micro Hei", SimSun, sans-serif;
+    line-height: 1.7;
+}
+.navbar-custom .navbar-brand {
+    font-weight: 800;
+    color: white;
+    height: 56px;
+    line-height: 25px;
+}
+.navbar-custom .navbar-brand:hover {
+    color: rgba(255, 255, 255, 0.8);
+}
+.navbar-custom .nav li a {
+    text-transform: uppercase;
+    font-size: 12px;
+    line-height: 20px;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+.navbar-custom .nav li a:active {
+    background: rgba(0, 0, 0, 0.12);
+}
+@media only screen and (min-width: 768px) {
+    .navbar-custom {
+        background: transparent;
+        border-bottom: 1px solid transparent;
+    }
+    .navbar-custom body {
+        font-size: 20px;
+    }
+    .navbar-custom .navbar-brand {
+        color: white;
+        padding: 20px;
+        line-height: 20px;
+    }
+    .navbar-custom .navbar-brand:hover,
+    .navbar-custom .navbar-brand:focus {
+        color: rgba(255, 255, 255, 0.8);
+    }
+    .navbar-custom .nav li a {
+        color: white;
+        padding: 20px;
+    }
+    .navbar-custom .nav li a:hover,
+    .navbar-custom .nav li a:focus {
+        color: rgba(255, 255, 255, 0.8);
+    }
+    .navbar-custom .nav li a:active {
+        background: none;
+    }
+}
+@media only screen and (min-width: 1170px) {
+    .navbar-custom {
+        -webkit-transition: background-color 0.3s;
+        -moz-transition: background-color 0.3s;
+        transition: background-color 0.3s;
+        /* Force Hardware Acceleration in WebKit */
+        -webkit-transform: translate3d(0, 0, 0);
+        -moz-transform: translate3d(0, 0, 0);
+        -ms-transform: translate3d(0, 0, 0);
+        -o-transform: translate3d(0, 0, 0);
+        transform: translate3d(0, 0, 0);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+    }
+    .navbar-custom.is-fixed {
+        /* when the user scrolls down, we hide the header right above the viewport */
+        position: fixed;
+        top: -61px;
+        background-color: rgba(255, 255, 255, 0.9);
+        border-bottom: 1px solid #f2f2f2;
+        -webkit-transition: -webkit-transform 0.3s;
+        -moz-transition: -moz-transform 0.3s;
+        transition: transform 0.3s;
+    }
+    .navbar-custom.is-fixed .navbar-brand {
+        color: #404040;
+    }
+    .navbar-custom.is-fixed .navbar-brand:hover,
+    .navbar-custom.is-fixed .navbar-brand:focus {
+        color: #0085a1;
+    }
+    .navbar-custom.is-fixed .nav li a {
+        color: #404040;
+    }
+    .navbar-custom.is-fixed .nav li a:hover,
+    .navbar-custom.is-fixed .nav li a:focus {
+        color: #0085a1;
+    }
+    .navbar-custom.is-visible {
+        /* if the user changes the scrolling direction, we show the header */
+        -webkit-transform: translate3d(0, 100%, 0);
+        -moz-transform: translate3d(0, 100%, 0);
+        -ms-transform: translate3d(0, 100%, 0);
+        -o-transform: translate3d(0, 100%, 0);
+        transform: translate3d(0, 100%, 0);
+    }
+}
+/* StyleSheet navbar end */
+
+/* StyleSheet intro-header start */
+.intro-header {
+    background: no-repeat center center;
+    background-color: #808080;
+    background-attachment: scroll;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    background-size: cover;
+    -o-background-size: cover;
+    margin-bottom: 0px;
+    /* 0 on mobile, modify by Hux */
+}
+@media only screen and (min-width: 768px) {
+    .intro-header {
+        margin-bottom: 20px;
+        /* response on desktop */
+    }
+}
+.intro-header .site-heading,
+.intro-header .post-heading,
+.intro-header .page-heading {
+    padding: 85px 0 55px;
+    color: white;
+}
+@media only screen and (min-width: 768px) {
+    .intro-header .site-heading,
+    .intro-header .post-heading,
+    .intro-header .page-heading {
+        padding: 150px 0;
+    }
+}
+.intro-header .site-heading {
+    padding: 95px 0 70px;
+}
+@media only screen and (min-width: 768px) {
+    .intro-header .site-heading {
+        padding: 150px 0;
+    }
+}
+.intro-header .site-heading,
+.intro-header .page-heading {
+    text-align: center;
+}
+.intro-header .site-heading h1,
+.intro-header .page-heading h1 {
+    margin-top: 0;
+    font-size: 50px;
+}
+.intro-header .site-heading .subheading,
+.intro-header .page-heading .subheading {
+    /* Hux learn from
+       *     TypeIsBeautiful,
+       *     [This Post](http://zhuanlan.zhihu.com/ibuick/20186806) etc.
+       */
+    font-family: -apple-system, "Helvetica Neue", "Arial", "PingFang SC", "Hiragino Sans GB", "STHeiti", "Microsoft YaHei", "Microsoft JhengHei", "Source Han Sans SC", "Noto Sans CJK SC", "Source Han Sans CN", "Noto Sans SC", "Source Han Sans TC", "Noto Sans CJK TC", "WenQuanYi Micro Hei", SimSun, sans-serif;
+    line-height: 1.7;
+    font-size: 18px;
+    line-height: 1.1;
+    display: block;
+    font-weight: 300;
+    margin: 10px 0 0;
+}
+@media only screen and (min-width: 768px) {
+    .intro-header .site-heading h1,
+    .intro-header .page-heading h1 {
+        font-size: 80px;
+    }
+}
+.intro-header .post-heading h1 {
+    font-size: 30px;
+    margin-bottom: 24px;
+}
+.intro-header .post-heading .subheading,
+.intro-header .post-heading .meta {
+    line-height: 1.1;
+    display: block;
+}
+.intro-header .post-heading .subheading {
+    /* Hux learn from
+       *     TypeIsBeautiful,
+       *     [This Post](http://zhuanlan.zhihu.com/ibuick/20186806) etc.
+       */
+    font-family: -apple-system, "Helvetica Neue", "Arial", "PingFang SC", "Hiragino Sans GB", "STHeiti", "Microsoft YaHei", "Microsoft JhengHei", "Source Han Sans SC", "Noto Sans CJK SC", "Source Han Sans CN", "Noto Sans SC", "Source Han Sans TC", "Noto Sans CJK TC", "WenQuanYi Micro Hei", SimSun, sans-serif;
+    line-height: 1.7;
+    font-size: 17px;
+    line-height: 1.4;
+    font-weight: normal;
+    margin: 10px 0 30px;
+    margin-top: -5px;
+}
+.intro-header .post-heading .meta {
+    font-family: 'Lora', 'Times New Roman', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: 18px;
+}
+.intro-header .post-heading .meta a {
+    color: white;
+}
+@media only screen and (min-width: 768px) {
+    .intro-header .post-heading h1 {
+        font-size: 55px;
+    }
+    .intro-header .post-heading .subheading {
+        font-size: 30px;
+    }
+    .intro-header .post-heading .meta {
+        font-size: 20px;
+    }
+}
+/* StyleSheet intro-header end */
+
+.frontpage-section-top {
+    margin-top:24px;
+}
+
+.frontpage-section-header {
+    margin-bottom:6px;
+}
+
+.explore-header {
+    font-size:20px;
+    font-weight:700;
+}
+
+a.plain-link {
+    color:inherit;
+    text-decoration:none;
+}
+
+a.plain-link:hover {
+    text-decoration:underline;
+}
+
+.movie-row{
+    position:relative;
+}
+
+.movie-row .movie-row-bounds{
+    overflow-x:hidden;
+}
+
+.movie-row .movie-row-bounds .movie-row-scrollable{
+    white-space:nowrap;
+    overflow-x:hidden;
+    transition:all .2s cubic-bezier(.4,0,.2,1);
+}
+
+.movie-row .movie-row-bounds .movie-row-scrollable::-webkit-scrollbar{
+    display:none;
+}
+
+.movie-row .movie-row-bounds .movie-row-item{
+    white-space:normal;
+    margin:0 1px 0 0;
+    display:inline-block;
+    vertical-align:top;
+}
+
+.movie-row .movie-row-back-button{
+    position:absolute;
+    top:40%;
+    left:-6px;
+    z-index:10;
+}
+
+.movie-row .movie-row-forward-button{
+    position:absolute;
+    top:40%;
+    right:-6px;
+    z-index:10;
+}
+
+.rating-or-prediction{
+    display:inline-block;
+}
+
+.rating-or-prediction.none{
+    display:none;
+}
+
+.rating-or-prediction.rated svg>polygon{
+    fill:#f06624;
+}
+
+.rating-or-prediction.predicted svg>polygon{
+    fill: #cfb53b;
+}
+
+.rating-or-prediction.average svg>polygon{
+    fill:gray;
+}
+
+.rating-or-prediction .star-icon{
+    position:relative;
+    top:2px;
+    left:0;
+}
+
+.rating-or-prediction .rating-value{
+    display:inline;
+    position:relative;
+    text-align:left;
+    padding-left:3px;
+    line-height:18px;
+    margin:0;
+    font-size:14px;
+    color:gray;
+}
+
+.movie-card-md1{
+    float:left;
+    margin:0 1px 3px 0;
+    position:relative;
+    height:280px;
+    width:154px;
+    overflow-x:visible;
+    font-size:14px;
+}
+
+.movie-card-md1 movie-card-actions-menu{
+    position:absolute;
+    top:8px;
+    right:6px;
+    z-index:2;
+}
+
+.movie-card-md1 movie-card-actions-menu .actions-button{
+    visibility:hidden;
+}
+
+.movie-card-md1:hover movie-card-actions-menu .actions-button{
+    visibility:visible;
+}
+
+.movie-card-md1 .card{
+    background:#fff;
+    border-radius:2px;
+    -moz-border-radius:2px;
+    -webkit-border-radius:2px;
+    display:inline-block;
+    height:280px;
+    width:154px;
+    position:relative;
+    box-shadow:0 1px 3px rgba(0,0,0,.5);
+    overflow-y:hidden;
+}
+
+.movie-card-md1 .card:hover{
+    box-shadow:0 2px 18px rgba(0,0,0,.5);
+}
+
+.movie-card-md1 .card .poster:hover{
+    cursor:pointer;
+}
+
+.movie-card-md1 .card .overlay .title:hover{
+    color:#3bace1!important;
+    cursor:pointer;
+}
+
+.movie-card-md1 .card .poster{
+    width:154px;
+    height:231px;
+    position:relative;
+    top:0;
+    z-index:1;
+}
+
+.movie-card-md1 .card .poster img{
+    max-width:100%;
+    border-radius:2px;
+    -moz-border-radius:2px;
+    -webkit-border-radius:2px;
+}
+
+.movie-card-md1 .card .poster.poster-hidden img{
+    opacity:.1;
+}
+
+.movie-card-md1 .card .poster.empty-poster{
+    background:#4c4c4c;
+}
+
+.movie-card-md1 .card .overlay{
+    position:absolute;
+    bottom:0;
+    width:154px;
+    background:#fff;
+    z-index:3;
+}
+
+.movie-card-md1 .card .overlay:hover .above-fold .releaseYear{
+    display:inherit;
+}
+
+.movie-card-md1 .card .overlay:hover .above-fold .rating-indicator{
+    display:none;
+}
+
+.movie-card-md1 .card .overlay:hover .below-fold{
+    max-height:280px;
+}
+
+.movie-card-md1 .card .overlay .above-fold{
+    margin-bottom:8px;
+}
+
+.movie-card-md1 .card .overlay .above-fold .title{
+    position:relative;
+    text-align:left;
+    line-height:19px;
+    margin:8px 8px 0;
+    font-size:16px;
+    color:rgba(0,0,0,.8);
+}
+
+.movie-card-md1 .card .overlay .above-fold .rating-indicator{
+    position:relative;
+    margin:3px 0 0 7px;
+}
+
+.movie-card-md1 .card .overlay .above-fold .wishlist{
+    float:right;
+    color: #d35113;
+    margin-right:7px;
+    margin-top:2px;
+    font-size:13px;
+}
+
+.movie-card-md1 .card .overlay .above-fold .releaseYear{
+    position:relative;
+    text-align:left;
+    margin:6px 0 0 9px;
+    height:14px;
+    color:rgba(0,0,0,.6);
+    display:none;
+}
+
+.movie-card-md1 .card .overlay .below-fold{
+    max-height:0;
+    transition:max-height .2s;
+}
+
+.movie-card-md1 .card .overlay .below-fold .genre-list{
+    text-align:left;
+    margin:0 8px;
+    padding-top:9px;
+}
+
+.movie-card-md1 .card .overlay .below-fold .genre-list .genre{
+    text-align:center;
+    margin:0 5px 5px 0;
+    border-radius:2px;
+    -moz-border-radius:2px;
+    -webkit-border-radius:2px;
+    padding:0 4px;
+    background:#3bace1;
+    display:inline-block;
+}
+
+.movie-card-md1 .card .overlay .below-fold .genre-list .genre:hover{
+    cursor:pointer;
+}
+
+.movie-card-md1 .card .overlay .below-fold .genre-list .genre a{
+    color:#fff;
+    font-weight:300;
+    line-height:12px;
+    letter-spacing:.1px;
+}
+
+.movie-card-md1 .card .overlay .below-fold .ratings-display{
+    text-align:center;
+    padding-top:6px;
+    color:rgba(0,0,0,.6);
+}
+
+.movie-card-md1 .card .overlay .below-fold .ratings-display .rating-predicted{
+    display:inline-block;
+}
+
+.movie-card-md1 .card .overlay .below-fold .ratings-display .rating-average{
+    display:inline-block;
+    margin-left:7px;
+}
+
+.movie-card-md1 .card .overlay .below-fold .ratings-display .rating-large{
+    text-align:left;
+    margin:0;
+    font-size:16px;
+    line-height:12px;
+}
+
+.movie-card-md1 .card .overlay .below-fold .ratings-display .rating-total{
+    text-align:left;
+    font-size:12px;
+    line-height:10px;
+}
+
+.movie-card-md1 .card .overlay .below-fold .ratings-display .rating-caption{
+    text-align:center;
+    margin:0;
+    font-size:13px;
+    line-height:16px;
+}
+
+.movie-card-md1 .card .overlay .below-fold .rating-entry{
+    padding:8px 0 0 2px;
+}

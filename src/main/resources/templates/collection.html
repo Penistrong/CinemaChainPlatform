@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="zh-cn" xmlns="http://www.w3.org/1999/html" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="common/head :: header(${genre} +' | Genre Collection', 'homePage')">
+</head>
+<body>
+    <nav th:replace="common/nav :: navbar"></nav>
+
+    <header th:replace="common/intro-header :: intro-header(${genre}, 'Collections of movies')"></header>
+
+</body>
+</html>
