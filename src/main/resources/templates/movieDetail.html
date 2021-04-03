@@ -6,12 +6,12 @@
     <nav th:replace="common/nav :: navbar"></nav>
 
     <div class="container">
-        <div id="movieDetailsContainer" class="col-md-8 col-md-offset-2">
+        <div id="movieDetailsContainer" class="col-md-10 col-md-offset-1">
             <el-container>
                 <el-aside width="200px" class="col-md-2">
                     <img th:src="@{|/posters/${movie.movieId}.jpg|}"/>
                 </el-aside>
-                <el-container class="col-md-9">
+                <el-container class="col-md-10">
                     <el-header><h1 th:text="${movie.title}"></h1></el-header>
                     <el-main>
                         <div class="col-md-2">
@@ -21,9 +21,9 @@
                             </div>
                             <div class="heading-and-data">
                                 <div class="movie-details-heading">Links</div>
-                                <a target="_blank" th:href="@{|http://www.imdb.com/title/|}">IMDB</a>
+                                <a target="_blank" th:href="@{|http://www.imdb.com/title/tt${movie.imdbId}|}">IMDB</a>
                                 <span>
-                                    <a target="_blank" th:href="@{|http://www.themoviedb.org/movie/${movie.movieId}|}">TMDB</a>
+                                    <a target="_blank" th:href="@{|http://www.themoviedb.org/movie/${movie.tmdbId}|}">TMDB</a>
                                 </span>
                             </div>
                         </div>
@@ -49,7 +49,14 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6"></div>
+                        <div class="col-md-6">
+                            <div class="heading-and-data">Genres</div>
+                            <div class="genres-chip-list">
+                                <a class="genres-chip genres-chip__layout" th:each="Genre:${movie.genres}" th:href="@{|/collection/${Genre}|}">
+                                    <span class="genres-chip__text" role="presentation" th:text="${Genre}"></span>
+                                </a>
+                            </div>
+                        </div>
                     </el-main>
                 </el-container>
             </el-container>

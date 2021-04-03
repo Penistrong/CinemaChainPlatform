@@ -26,8 +26,8 @@ public class HomePageController {
 
     @RequestMapping(value="")
     public String homePage(@RequestParam(value="pageIndex", defaultValue="1") Integer pageIndex,
-                           @RequestParam(value="pageSize", defaultValue = "5") Integer pageSize,
-                           @RequestParam(value="listSize", defaultValue = "8") Integer listSize,
+                           @RequestParam(value="pageSize", defaultValue = "6") Integer pageSize,
+                           @RequestParam(value="listSize", defaultValue = "7") Integer listSize,
                            Model model){
         HashMap<String, List<Movie>> genre_movies = movieService.getMoviesFromDataManager(pageIndex, pageSize, listSize);
         model.addAttribute("genre_movies", genre_movies);
