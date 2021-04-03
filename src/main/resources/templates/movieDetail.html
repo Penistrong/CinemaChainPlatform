@@ -3,6 +3,65 @@
 <head th:replace="common/head :: header(${movie.title} +' | Movie Detail', 'homePage')">
 </head>
 <body>
+    <nav th:replace="common/nav :: navbar"></nav>
+
+    <div class="container">
+        <div id="movieDetailsContainer" class="col-md-8 col-md-offset-2">
+            <el-container>
+                <el-aside width="200px" class="col-md-2">
+                    <img th:src="@{|/posters/${movie.movieId}.jpg|}"/>
+                </el-aside>
+                <el-container class="col-md-9">
+                    <el-header><h1 th:text="${movie.title}"></h1></el-header>
+                    <el-main>
+                        <div class="col-md-2">
+                            <div class="heading-and-data">
+                                <div class="movie-details-heading">Release Year</div>
+                                <div th:text="${movie.releaseYear}"></div>
+                            </div>
+                            <div class="heading-and-data">
+                                <div class="movie-details-heading">Links</div>
+                                <a target="_blank" th:href="@{|http://www.imdb.com/title/|}">IMDB</a>
+                                <span>
+                                    <a target="_blank" th:href="@{|http://www.themoviedb.org/movie/${movie.movieId}|}">TMDB</a>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="heading-and-data">
+                                <div class="movie-details-heading">MovieLens Prediction</div>
+                                <div class="rating-or-prediction predicted">
+                                    <svg xmlns:xlink="http://www.w3.org/1999/xlink" class="star-icon" height="14px" version="1.1" viewbox="0 0 14 14" width="14px" xmlns="http://www.w3.org/2000/svg">
+                                        <defs></defs>
+                                        <polygon fill-rule="evenodd" points="13.7714286 5.4939887 9.22142857 4.89188383 7.27142857 0.790044361 5.32142857 4.89188383 0.771428571 5.4939887 4.11428571 8.56096041 3.25071429 13.0202996 7.27142857 10.8282616 11.2921429 13.0202996 10.4285714 8.56096041" stroke="none">></polygon>
+                                    </svg>
+                                    <div class="rating-value">5.0</div>
+                                </div>
+                            </div>
+                            <div class="heading-and-data">
+                                <div class="movie-details-heading">Average of <span th:text="${movie.ratingNumber}"></span> Ratings</div>
+                                <div class="rating-or-prediction predicted">
+                                    <svg xmlns:xlink="http://www.w3.org/1999/xlink" class="star-icon" height="14px" version="1.1" viewbox="0 0 14 14" width="14px" xmlns="http://www.w3.org/2000/svg">
+                                        <defs></defs>
+                                        <polygon fill-rule="evenodd" points="13.7714286 5.4939887 9.22142857 4.89188383 7.27142857 0.790044361 5.32142857 4.89188383 0.771428571 5.4939887 4.11428571 8.56096041 3.25071429 13.0202996 7.27142857 10.8282616 11.2921429 13.0202996 10.4285714 8.56096041" stroke="none">></polygon>
+                                    </svg>
+                                    <div class="rating-value" th:text="${#numbers.formatDecimal(movie.averageRating, 1, 2)}"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6"></div>
+                    </el-main>
+                </el-container>
+            </el-container>
+        </div>
+        <div class="col-md-8 col-md-offset-2">
+            <div class="frontpage-section-top">
+                <div class="explore-header frontpage-section-header">
+
+                </div>
+            </div>
+        </div>
+    </div>
 
 </body>
 </html>

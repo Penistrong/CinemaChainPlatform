@@ -5,6 +5,15 @@ spring:
     username: root
     password: chenliwei
 
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 294323192648-nuvj58l0ub4dksa03mgtnfe2abcpj2vg.apps.googleusercontent.com
+            client-secret: Tj8YT5OB4ZXdb-RPHnt-hWrG
+
   mvc:
     format:
       date: yyyy-MM-dd
+
