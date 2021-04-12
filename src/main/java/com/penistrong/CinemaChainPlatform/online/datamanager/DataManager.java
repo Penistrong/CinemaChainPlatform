@@ -3,6 +3,7 @@ package com.penistrong.CinemaChainPlatform.online.datamanager;
 
 import com.penistrong.CinemaChainPlatform.online.model.Movie;
 import com.penistrong.CinemaChainPlatform.online.model.Rating;
+import com.penistrong.CinemaChainPlatform.online.model.SortByMethod;
 import com.penistrong.CinemaChainPlatform.online.model.User;
 import com.penistrong.CinemaChainPlatform.online.util.Config;
 import com.penistrong.CinemaChainPlatform.online.util.Utility;
@@ -268,6 +269,26 @@ public class DataManager {
         return this.genreReverseIndexMap.get(genre);
     }
 
+    //Get a given size of the movies in a given genre, order them by param "sortBy" method
+    public List<Movie> getOrderedMoviesByGenre(String genre, int size, SortByMethod method) {
+        if(genre == null)
+            return null;
+        List<Movie> movies = new ArrayList<>(this.genreReverseIndexMap.get(genre));
+        switch(method){
+            case rating: //按评分排序
+                movies.sort((m1, m2) -> Double.compare(m2.getAverageRating(), m1.getAverageRating()));
+                break;
+            case releaseYear: //按上映年份排序
+                movies.sort((m1, m2) -> Integer.compare(m2.getReleaseYear(), m1.getReleaseYear()));
+                break;
+            default:
+        }
+        //如果超过给定大小则给出子列表
+        if(movies.size() > size)
+            movies = movies.subList(0, size);
+        return movies;
+    }
+
     //Get subMap of genre and its movieList by given pageSize
     public HashMap<String, List<Movie>> getMoviesByGenreNumbers(Integer pageSize, Integer listSize) {
         HashMap<String, List<Movie>> genre_movies = new HashMap<>();
@@ -279,4 +300,5 @@ public class DataManager {
         }
         return genre_movies;
     }
+
 }

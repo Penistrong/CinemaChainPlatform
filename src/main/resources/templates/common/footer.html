@@ -1,10 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
-</head>
-<body>
-$END$
-</body>
+<html lang="zh-cn" xmlns="http://www.w3.org/1999/html" xmlns:th="http://www.thymeleaf.org">
+
+<footer th:fragment="footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <!-- SNS Link -->
+                <ul th:replace="common/sns-links::sns-links"></ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; Cinema Chain Platform 2021
+                    <br>
+                    Author's blog <a target="_blank" href="http://www.penistrong.top/blog">Penistrong</a> | Github repo
+                    <iframe
+                            style="margin-left: 2px; margin-bottom:-5px;"
+                            frameborder="0" scrolling="0" width="91px" height="20px"
+                            src="https://ghbtns.com/github-btn.html?user=Penistrong&repo=CinemaChainPlatform&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+
 </html>

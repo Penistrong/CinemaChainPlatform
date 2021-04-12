@@ -25,7 +25,7 @@
             <div class="movie-row">
                 <div class="movie-row-bounds">
                     <div class="movie-row-scrollable" style="margin-left: 0">
-                        <div th:each="Movie:${entry.getValue()}" class="movie-row-item" style="margin-left: 5px">
+                        <div th:each="Movie:${entry.getValue()}" class="movie-row-item" style="margin-right: 5px">
                             <movie-card-smart>
                                 <movie-card-md1>
                                     <div class="movie-card-md1">
@@ -68,7 +68,7 @@
                                                     <div class="ratings-display">
                                                         <div class="rating-average">
                                                             <span class="rating-large" th:text="${#numbers.formatDecimal(Movie.averageRating, 1, 2)}"></span>
-                                                            <span class="rating-total">/5</span>
+                                                            <span class="rating-total">/ 5</span>
                                                             <p class="rating-caption" th:text="${Movie.ratingNumber}+' ratings'"></p>
                                                         </div>
                                                     </div>
@@ -85,6 +85,8 @@
             </div>
         </div>
     </div>
+
+    <footer th:replace="common/footer::footer"></footer>
 
 </body>
 

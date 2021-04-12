@@ -1,0 +1,102 @@
+/* Genres Chip StyleSheet */
+.genres-chip-list{
+    display: inline-flex;
+    flex-wrap: wrap;
+}
+
+.genres-chip-list > .genres-chip{
+    margin-right: 0.8rem;
+    margin-bottom: 0.8rem;
+}
+
+.genres-chip:before{
+    content: '';
+    height: 100%;
+    left:0;
+    opacity: 0;
+    top:0;
+    width: 100%;
+    z-index: 0;
+    background-color: currentColor;
+    position: absolute;
+}
+
+.genres-chip{
+    color: #fff;
+    font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+    font-size: .875em;
+    line-height: 1.25em;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: .01786em;
+    cursor: pointer;
+    user-select: none;
+    display: inline-flex;
+    border: 2px solid transparent;
+    border-radius: 1em;
+    margin: 0;
+    padding: .25rem .75rem;
+    align-items: center;
+    position: relative; /*控制before*/
+}
+
+.genres-chip:hover{
+    background-color: rgba(255,255,255,0.1);
+}
+
+.genres-chip__layout, .genres-chip__layout:hover, .genres-chip__layout:active, .genres-chip__layout:focus {
+    border-color: rgba(255, 255, 255, 0.64);
+    text-decoration: none;
+    color:#fff;
+}
+
+.genres-chip__text{
+
+}
+
+#movieDetailsContainer{
+    color: #fff;
+}
+
+#movieDetailsContainer h1{
+    margin-left: 15px;
+}
+
+.movie-details-section {
+    background-color: #1f1f1f;
+    border-radius: 1.5rem;
+}
+
+.movie-details-poster img{
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    border-radius: 1rem;
+}
+
+.movie-details-rating{
+    color:#fff;
+}
+
+.movie-details-heading{
+    color:#f06624;
+    font-size:13px;
+}
+
+.heading-and-data a{
+    color: #fff;
+    text-decoration: none;
+}
+
+.heading-and-data a:hover{
+    color:#f5c518;
+}
+
+/* 与首页中的电影卡片排列是不同的策略,display:inline-block => block,使推荐的电影块状堆叠 */
+.movie-row .movie-row-bounds .movie-row-item{
+    display: block !important;
+}
+
+.movie-card-md1{
+    margin: 0 5px 15px 0;
+}

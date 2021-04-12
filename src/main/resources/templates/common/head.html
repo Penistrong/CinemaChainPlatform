@@ -1,3 +1,5 @@
+<html lang="zh-cn" xmlns="http://www.w3.org/1999/html" xmlns:th="http://www.thymeleaf.org">
+
 <head th:fragment="header(title, customPage)">
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -36,6 +38,9 @@
     <!-- Bootstrap Core CSS -->
     <link th:href="@{/css/bootstrap/bootstrap.min.css}" rel="stylesheet"/>
 
+    <!-- Common CSS -->
+    <link th:href="@{/css/common/clientFrontPage.css}" rel="stylesheet"/>
+
     <!-- Custom CSS -->
     <!-- 注意使用了管道语法在超链接url里使用变量 -->
     <link th:href="@{|/css/${customPage}.css|}" rel="stylesheet"/>
@@ -57,6 +62,9 @@
     <!-- jQuery Core js -->
     <script th:src="@{/js/jquery.min.js}" type="text/javascript"></script>
 
+    <!-- Common JS -->
+    <script th:src="@{/js/common/clientFrontPage.js}" type="text/javascript"></script>
+
     <!-- Custom JS -->
     <script th:src="@{|/js/${customPage}.js|}" type="text/javascript"></script>
 
@@ -70,3 +78,5 @@
     <!-- ga & ba script hoook -->
     <script></script>
 </head>
+
+</html>

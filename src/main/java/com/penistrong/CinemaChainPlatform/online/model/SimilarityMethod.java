@@ -1,2 +1,6 @@
-package com.penistrong.CinemaChainPlatform.online.model;public enum SimilarityMethod {
+package com.penistrong.CinemaChainPlatform.online.model;
+
+public enum SimilarityMethod {
+    Embedding
 }
+

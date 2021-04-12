@@ -1,74 +1,145 @@
 <!DOCTYPE html>
 <html lang="zh-cn" xmlns="http://www.w3.org/1999/html" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="common/head :: header(${movie.title} +' | Movie Detail', 'homePage')">
+<head th:replace="common/head :: header(${movie.title} +' | Movie Detail', 'movieDetailPage')">
 </head>
 <body>
     <nav th:replace="common/nav :: navbar"></nav>
 
+    <header th:replace="common/intro-header::intro-header-movieDetail(${movie.title}, ${movie.movieId})"></header>
+
     <div class="container">
-        <div id="movieDetailsContainer" class="col-md-10 col-md-offset-1">
-            <el-container>
-                <el-aside width="200px" class="col-md-2">
-                    <img th:src="@{|/posters/${movie.movieId}.jpg|}"/>
-                </el-aside>
-                <el-container class="col-md-10">
-                    <el-header><h1 th:text="${movie.title}"></h1></el-header>
-                    <el-main>
-                        <div class="col-md-2">
-                            <div class="heading-and-data">
-                                <div class="movie-details-heading">Release Year</div>
-                                <div th:text="${movie.releaseYear}"></div>
-                            </div>
-                            <div class="heading-and-data">
-                                <div class="movie-details-heading">Links</div>
-                                <a target="_blank" th:href="@{|http://www.imdb.com/title/tt${movie.imdbId}|}">IMDB</a>
-                                <span>
-                                    <a target="_blank" th:href="@{|http://www.themoviedb.org/movie/${movie.tmdbId}|}">TMDB</a>
-                                </span>
+        <div id="movieDetailsContainer" class="panel-body movie-details-section">
+                <div class="col-md-3 movie-details-poster">
+                    <img th:src="@{|/posters/${movie.movieId}.jpg|}" th:alt="${movie.title}"/>
+                </div>
+                <div class="col-md-9">
+                    <h1 th:text="${movie.title}"></h1>
+                    <div class="col-md-2">
+                        <div class="heading-and-data">
+                            <div class="movie-details-heading">Release Year</div>
+                            <div th:text="${movie.releaseYear}"></div>
+                        </div>
+                        <div class="heading-and-data">
+                            <div class="movie-details-heading">Links</div>
+                            <a target="_blank" th:href="@{|http://www.imdb.com/title/tt${movie.imdbId}|}">IMDB</a>
+                            <span>
+                                <a target="_blank" th:href="@{|http://www.themoviedb.org/movie/${movie.tmdbId}|}">TMDB</a>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="heading-and-data">
+                            <div class="movie-details-heading">MovieLens Prediction</div>
+                            <div class="rating-or-prediction predicted">
+                                <svg xmlns:xlink="http://www.w3.org/1999/xlink" class="star-icon" height="14px" version="1.1" viewbox="0 0 14 14" width="14px" xmlns="http://www.w3.org/2000/svg">
+                                    <defs></defs>
+                                    <polygon fill-rule="evenodd" points="13.7714286 5.4939887 9.22142857 4.89188383 7.27142857 0.790044361 5.32142857 4.89188383 0.771428571 5.4939887 4.11428571 8.56096041 3.25071429 13.0202996 7.27142857 10.8282616 11.2921429 13.0202996 10.4285714 8.56096041" stroke="none">></polygon>
+                                </svg>
+                                <div class="rating-value"><span class="movie-details-rating">5.0</span> / 5.0</div>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="heading-and-data">
-                                <div class="movie-details-heading">MovieLens Prediction</div>
-                                <div class="rating-or-prediction predicted">
-                                    <svg xmlns:xlink="http://www.w3.org/1999/xlink" class="star-icon" height="14px" version="1.1" viewbox="0 0 14 14" width="14px" xmlns="http://www.w3.org/2000/svg">
-                                        <defs></defs>
-                                        <polygon fill-rule="evenodd" points="13.7714286 5.4939887 9.22142857 4.89188383 7.27142857 0.790044361 5.32142857 4.89188383 0.771428571 5.4939887 4.11428571 8.56096041 3.25071429 13.0202996 7.27142857 10.8282616 11.2921429 13.0202996 10.4285714 8.56096041" stroke="none">></polygon>
-                                    </svg>
-                                    <div class="rating-value">5.0</div>
-                                </div>
-                            </div>
-                            <div class="heading-and-data">
-                                <div class="movie-details-heading">Average of <span th:text="${movie.ratingNumber}"></span> Ratings</div>
-                                <div class="rating-or-prediction predicted">
-                                    <svg xmlns:xlink="http://www.w3.org/1999/xlink" class="star-icon" height="14px" version="1.1" viewbox="0 0 14 14" width="14px" xmlns="http://www.w3.org/2000/svg">
-                                        <defs></defs>
-                                        <polygon fill-rule="evenodd" points="13.7714286 5.4939887 9.22142857 4.89188383 7.27142857 0.790044361 5.32142857 4.89188383 0.771428571 5.4939887 4.11428571 8.56096041 3.25071429 13.0202996 7.27142857 10.8282616 11.2921429 13.0202996 10.4285714 8.56096041" stroke="none">></polygon>
-                                    </svg>
-                                    <div class="rating-value" th:text="${#numbers.formatDecimal(movie.averageRating, 1, 2)}"></div>
-                                </div>
+                        <div class="heading-and-data">
+                            <div class="movie-details-heading">Average of <span th:text="${movie.ratingNumber}"></span> Ratings</div>
+                            <div class="rating-or-prediction predicted">
+                                <svg xmlns:xlink="http://www.w3.org/1999/xlink" class="star-icon" height="14px" version="1.1" viewbox="0 0 14 14" width="14px" xmlns="http://www.w3.org/2000/svg">
+                                    <defs></defs>
+                                    <polygon fill-rule="evenodd" points="13.7714286 5.4939887 9.22142857 4.89188383 7.27142857 0.790044361 5.32142857 4.89188383 0.771428571 5.4939887 4.11428571 8.56096041 3.25071429 13.0202996 7.27142857 10.8282616 11.2921429 13.0202996 10.4285714 8.56096041" stroke="none">></polygon>
+                                </svg>
+                                <div class="rating-value"><span class="movie-details-rating"  th:text="${#numbers.formatDecimal(movie.averageRating, 1, 2)}"></span> / 5.0</div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="heading-and-data">Genres</div>
+                    </div>
+                    <div class="col-md-7">
+                        <div class="heading-and-data">
+                            <div class="movie-details-heading">Genres</div>
                             <div class="genres-chip-list">
                                 <a class="genres-chip genres-chip__layout" th:each="Genre:${movie.genres}" th:href="@{|/collection/${Genre}|}">
                                     <span class="genres-chip__text" role="presentation" th:text="${Genre}"></span>
                                 </a>
                             </div>
                         </div>
-                    </el-main>
-                </el-container>
-            </el-container>
+                    </div>
+                </div>
         </div>
-        <div class="col-md-8 col-md-offset-2">
+        <!-- Related Movie -->
             <div class="frontpage-section-top">
                 <div class="explore-header frontpage-section-header">
-
+                    <a class="plain-link genre-title genre-title-link-wrapper" title="Go to the related movies full page" th:href="@{|/related/${movie.movieId}|}">
+                        <h3 class="genre-title__text">
+                            <span >Related Movies</span>
+                            <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" class="ipc-icon ipc-icon--chevron-right-inline genre-link-icon--inline genre-title-link-chevron" viewBox="0 0 24 24" fill="currentColor" role="presentation">
+                                <path d="M5.622.631A2.153 2.153 0 0 0 5 2.147c0 .568.224 1.113.622 1.515l8.249 8.34-8.25 8.34a2.16 2.16 0 0 0-.548 2.07c.196.74.768 1.317 1.499 1.515a2.104 2.104 0 0 0 2.048-.555l9.758-9.866a2.153 2.153 0 0 0 0-3.03L8.62.61C7.812-.207 6.45-.207 5.622.63z">
+                                </path>
+                            </svg>
+                        </h3>
+                        <div class="genre-title__description">Get top N related movies by calculating Cosine Similarity between this movie and its rec-candidates</div>
+                    </a>
+                </div>
+                <div class="movie-row">
+                    <div class="movie-row-bounds">
+                        <div class="movie-row-scrollable">
+                            <div th:each="Movie:${relatedMovies}" class="movie-row-item" style="margin-right: 5px">
+                                <movie-card-smart>
+                                    <movie-card-md1>
+                                        <div class="movie-card-md1">
+                                            <div class="card">
+                                                <link-or-emit>
+                                                    <a th:href="@{|/movie/${Movie.movieId}|}">
+                                                    <span>
+                                                        <div class="poster">
+                                                            <img th:src="@{|/posters/${Movie.movieId}.jpg|}"/>
+                                                        </div>
+                                                    </span>
+                                                    </a>
+                                                </link-or-emit>
+                                                <div class="overlay">
+                                                    <div class="above-fold">
+                                                        <linl-or-emit>
+                                                            <a th:href="@{|/movie/${Movie.movieId}|}">
+                                                                <span><p class="title" th:text="${Movie.title}"></p></span>
+                                                            </a>
+                                                        </linl-or-emit>
+                                                        <div class="rating-indicator">
+                                                            <ml4-rating-or-prediction>
+                                                                <div class="rating-or-prediction predicted">
+                                                                    <svg xmlns:xlink="http://www.w3.org/1999/xlink" class="star-icon" height="14px" version="1.1" viewbox="0 0 14 14" width="14px" xmlns="http://www.w3.org/2000/svg">
+                                                                        <defs></defs>
+                                                                        <polygon fill-rule="evenodd" points="13.7714286 5.4939887 9.22142857 4.89188383 7.27142857 0.790044361 5.32142857 4.89188383 0.771428571 5.4939887 4.11428571 8.56096041 3.25071429 13.0202996 7.27142857 10.8282616 11.2921429 13.0202996 10.4285714 8.56096041" stroke="none">></polygon>
+                                                                    </svg>
+                                                                    <div class="rating-value" th:text="${#numbers.formatDecimal(Movie.averageRating, 1, 2)}"></div>
+                                                                </div>
+                                                            </ml4-rating-or-prediction>
+                                                        </div>
+                                                        <p class="releaseYear" th:text="${Movie.releaseYear}"></p>
+                                                    </div>
+                                                    <div class="below-fold">
+                                                        <div class="genre-list">
+                                                            <div class="genre" th:each="subGenre:${Movie.genres}">
+                                                                <a th:href="@{|/collection/${subGenre}|}" th:text="${subGenre}"></a>
+                                                            </div>
+                                                        </div>
+                                                        <div class="ratings-display">
+                                                            <div class="rating-average">
+                                                                <span class="rating-large" th:text="${#numbers.formatDecimal(Movie.averageRating, 1, 2)}"></span>
+                                                                <span class="rating-total">/5</span>
+                                                                <p class="rating-caption" th:text="${Movie.ratingNumber}+' ratings'"></p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </movie-card-md1>
+                                </movie-card-smart>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+
     </div>
+
+    <footer th:replace="common/footer::footer"></footer>
 
 </body>
 </html>

@@ -1,2 +1,6 @@
-package com.penistrong.CinemaChainPlatform.online.model;public enum SortByMethod {
+package com.penistrong.CinemaChainPlatform.online.model;
+
+public enum SortByMethod {
+    rating,
+    releaseYear
 }
