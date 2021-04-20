@@ -15,10 +15,10 @@ import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 
 //Completely Override the Auto-configuration of SpringBoot2.0
-@Configuration
+//@Configuration
 public class OAuth2LoginConfig {
 
-    @EnableWebSecurity
+    //@EnableWebSecurity
     public static class OAuth2LoginSecurityConfig extends WebSecurityConfigurerAdapter {
 
         @Override
@@ -31,7 +31,7 @@ public class OAuth2LoginConfig {
         protected void configure(HttpSecurity http) throws Exception{
             http
                     .authorizeRequests()
-                        .antMatchers( "/user/login/oauth2", "/homepage", "/movie/**", "/collection/**", "/js/**", "/css/**","/*/*.jpg", "/*/*.png", "/*.ico").permitAll() //主页、电影详情页、电影分类页不登录均可访问
+                        .antMatchers( "/druid/**", "/user/login/oauth2/**", "/homepage", "/movie/**", "/collection/**", "/js/**", "/css/**","/*/*.jpg", "/*/*.png", "/*.ico").permitAll() //主页、电影详情页、电影分类页不登录均可访问
                         .antMatchers("/admin/**").hasRole("ADMIN")                          //后台管理页面必须当前用户为管理员角色
                         .anyRequest().authenticated()                                                   //其他都要验证登录信息
                     .and()

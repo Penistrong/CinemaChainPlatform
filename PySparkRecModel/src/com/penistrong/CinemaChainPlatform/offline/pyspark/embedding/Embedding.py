@@ -11,8 +11,11 @@
 
 # here put the import lib
 import os
-
+from collections import defaultdict
+import random
 import findspark
+import redis
+
 from pyspark import SparkConf
 from pyspark.mllib.feature import Word2Vec
 from pyspark.sql.types import ArrayType, StringType
@@ -78,17 +81,148 @@ def trainItem2vec(spark, samples, embLength, embOutputPath, redisKeyPrefix, save
     synonyms = model.findSynonyms("592", 20)  # id"592"为蝙蝠侠Batman
     for synonym, cosineSimilarity in synonyms:
         print(synonym, cosineSimilarity)
-    # 准备从训练完毕后的Word2vec中取出Embedding向量并存入目标文件夹中或redis中
-    embOutputDir = '/'.join(embOutputPath.split('/')[:-1])  #
-    if not os.path.exists(embOutputDir):
-        os.mkdir(embOutputDir)
-    # 使用getVectors()方法得到存放word及其向量表达(Embedding向量,W_vxn的行向量)的map<movie_id : String, Embedding : Vector>
-    with open(embOutputPath, 'w') as file:
+
+    if not saveToRedis:
+        # 准备从训练完毕后的Word2vec中取出Embedding向量并存入目标文件夹中或redis中
+        embOutputDir = '/'.join(embOutputPath.split('/')[:-1])  #
+        if not os.path.exists(embOutputDir):
+            os.mkdir(embOutputDir)
+        # 使用getVectors()方法得到存放word及其向量表达(Embedding向量,W_vxn的行向量)的map<movie_id : String, Embedding : Vector>
+        with open(embOutputPath, 'w') as file:
+            for movie_id in model.getVectors():
+                vectors = " ".join([str(emb) for emb in model.getVectors()[movie_id]])
+                file.write(movie_id + ":" + vectors + "\n")
+    else:
+        redis_client = redis.StrictRedis(host='66.42.66.135', port='6379', db=0, password='chenliwei')
+        expire_time = 60*60*24  # 设置缓存时间为24h
+        # 使用Pipeline,否则每一次连接Redis都消耗一次RTT，过于慢了
+        pipe = redis_client.pipeline(transaction=True)
         for movie_id in model.getVectors():
             vectors = " ".join([str(emb) for emb in model.getVectors()[movie_id]])
-            file.write(movie_id + ":" + vectors + "\n")
+            pipe.set(redisKeyPrefix + ":" + movie_id, vectors)
+        # 执行管道里的各请求
+        pipe.execute()
+        redis_client.close()
+
+        # 将Item的Embedding写入Redis中
     # TODO: embeddingLSH(spark, model.getVectors())
     return model
+
+
+'''
+Graph Embedding
+使用Deep Walk的简单实现
+依据Deep Walk原理，要准备Item之间的概率转移矩阵，即图中到达某节点后，根据其出边权重和计算的跳转到各邻接节点的概率
+'''
+
+
+# 根据输入的Item序列，将其中元素两两结合生成相邻的Item Pair
+def generate_pair(x):
+    # eg
+    # input x as Seq: [50, 120, 100, 240] List[str]
+    # output pairSeq: [(50, 120), (120, 100), (100, 240)] List[Tuple(str, str)]
+    pairSeq = []
+    previous_item = ''
+    for item in x:
+        if not previous_item:
+            previous_item = item
+        else:
+            pairSeq.append((previous_item, item))
+            previous_item = item
+    return pairSeq
+
+
+"""
+生成转移概率矩阵
+return transitionMatrix(转移概率矩阵) as defaultdict(dict), itemDistribution
+"""
+
+
+def generateTransitionMatrix(samples):
+    # 使用flatMap将Item序列碎为一个个Item Pair
+    pairSamples = samples.flatMap(lambda x: generate_pair(x))
+    # 使用pyspark.rdd.countByValue(), 返回的是存放Item Pair及其出现的次数的dictionary, 即{(v1, v2):2, (v1, v3):4, ...}
+    # Return the count of each unique value in this RDD as a dictionary of (value, count) pairs.
+    pairCountMap = pairSamples.countByValue()
+    # 记录总对数
+    pairTotalCount = 0
+    # 转移数量矩阵,双层Map类数据结构.Like Map<String, Map<String, Integer>> in JAVA
+    transitionCountMatrix = defaultdict(dict)
+    # 记录从某节点出发，其所有出边的权重之和
+    itemCountMap = defaultdict(int)
+    # 统计Item Pair的个数 {tuple(v1, v2):int(count)}
+    for pair, count in pairCountMap.items():
+        v1, v2 = pair
+        transitionCountMatrix[v1][v2] = count
+        itemCountMap[v1] += count
+        pairTotalCount += count
+    # 转移概率矩阵，根据前述辅助变量进行计算
+    transitionMatrix = defaultdict(dict)
+    itemDistribution = defaultdict(dict)
+    for v1, transitionMap in transitionCountMatrix.items():
+        for v2, count in transitionMap.items():
+            # 从某节点跳转到其某一邻接节点的概率是该边权重占所有出边权重之和的比例
+            transitionMatrix[v1][v2] = transitionCountMatrix[v1][v2] / itemCountMap[v1]
+    for v, count in itemCountMap.items():
+        itemDistribution[v] = count / pairTotalCount
+    return transitionMatrix, itemDistribution
+
+
+# 单次随机游走
+def oneRandomWalk(transitionMatrix, itemDistribution, sampleLength):
+    sample = []
+    # 随机选择本次游走的起点
+    # 产生一个[0,1)间的随机浮点数
+    randomDouble = random.random()
+    startItem = ""
+    accumulateProbability = 0.0
+    # 朴素方法找起始节点
+    for item, prob in itemDistribution.items():
+        accumulateProbability += prob
+        if accumulateProbability >= randomDouble:
+            startItem = item
+            break
+    sample.append(startItem)
+    # 标记当前节点的变量
+    cur_v = startItem
+    i = 1
+    while i < sampleLength:
+        # 如果当前节点没有出边，即本次游走终止(即本次训练样本长度小于最大样本长度)
+        if (cur_v not in itemDistribution) or (cur_v not in transitionMatrix):
+            break
+        next_v_probability = transitionMatrix[cur_v]
+        # 故技重施
+        randomDouble = random.random()
+        accumulateProbability = 0.0
+        for next_v, probability in next_v_probability.items():
+            accumulateProbability += probability
+            if accumulateProbability >= randomDouble:
+                cur_v = next_v
+                break
+        sample.append(cur_v)
+        i += 1
+    return sample
+
+
+# 在图中随机游走生成训练样本
+def randomWalk(transitionMatrix, itemDistribution, sampleCount, sampleLength):
+    samples = []
+    for i in range(sampleCount):
+        samples.append(oneRandomWalk(transitionMatrix, itemDistribution, sampleLength))
+    return samples
+
+
+def graphEmbedding(samples, spark, embLength, embOutputPath, redisKeyPrefix, saveToRedis=False):
+    # 根据samples(Item Sequence)生成图及其概率转移矩阵和Item的分布情况(某Item作为源点出现在所有节点对中的次数占)
+    transitionMatrix, itemDistribution = generateTransitionMatrix(samples)
+    # 先定死样本数量(即游走次数)和每个训练样本的最大长度(生成的训练样本有可能提前终止)
+    sampleCount = 20000
+    sampleLength = 10
+    rawSamples = randomWalk(transitionMatrix, itemDistribution, sampleCount, sampleLength)
+    # 使用sc.parallelize分发训练样本集形成一个RDD(即创建并行集合)
+    rddSamples = spark.sparkContext.parallelize(rawSamples)
+    # 开始训练
+    trainItem2vec(spark, rddSamples, embLength, embOutputPath, redisKeyPrefix=redisKeyPrefix, saveToRedis=saveToRedis)
 
 
 if __name__ == '__main__':
@@ -97,3 +231,14 @@ if __name__ == '__main__':
     file_context = 'file:///E:/workspace/CinemaChainPlatform/src/main/resources/resources'
     ratingsPath = file_context + "/dataset/ratings.csv"
     samples = processItemSequence(spark, ratingsPath)
+
+    # 使用item2vec训练样本
+    embLength = 10
+    model = trainItem2vec(spark, samples, embLength,
+                          embOutputPath=file_context[8:] + "/modeldata/item2vecEmb.csv",
+                          redisKeyPrefix="i2vEmb", saveToRedis=True)
+
+    # 使用Graph Embedding生成样本
+    graphEmbedding(samples, spark, embLength,
+                   embOutputPath=file_context[8:] + "/modeldata/itemGraphEmb.csv",
+                   redisKeyPrefix="graphEmb", saveToRedis=True)

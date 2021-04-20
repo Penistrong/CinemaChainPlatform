@@ -18,6 +18,10 @@ public class User {
     double lowestRating = 5.0;
     int ratingCount = 0;
 
+    //OAuth2 authentication
+    private String username;
+    private String password;
+
     @JsonSerialize(using = RatingListSerializer.class)
     List<Rating> ratings;
 
@@ -108,5 +112,21 @@ public class User {
 
     public void setUserFeatures(Map<String, String> userFeatures) {
         this.userFeatures = userFeatures;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

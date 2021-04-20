@@ -5,10 +5,12 @@ import com.penistrong.CinemaChainPlatform.online.model.Movie;
 import com.penistrong.CinemaChainPlatform.online.model.Rating;
 import com.penistrong.CinemaChainPlatform.online.model.SortByMethod;
 import com.penistrong.CinemaChainPlatform.online.model.User;
+import com.penistrong.CinemaChainPlatform.online.redis.JedisClient;
 import com.penistrong.CinemaChainPlatform.online.util.Config;
 import com.penistrong.CinemaChainPlatform.online.util.Utility;
+import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.Response;
 
-import javax.xml.crypto.Data;
 import java.io.File;
 import java.util.*;
 
@@ -188,27 +190,36 @@ public class DataManager {
                     String[] movieEmbData = movieRawEmbData.split(":");
                     if (movieEmbData.length == 2) {
                         Movie m = getMovieById(Integer.parseInt(movieEmbData[0]));
-                        if (null == m) {
-                            continue;
+                        if (m != null) {
+                            m.setEmb(Utility.parseEmbStr(movieEmbData[1]));
+                            validEmbCount++;
                         }
-                        m.setEmb(Utility.parseEmbStr(movieEmbData[1]));
-                        validEmbCount++;
                     }
                 }
             }
             System.out.println("Loading movie embedding completed. " + validEmbCount + " movie embeddings in total.");
-        }else{
+        }
+        else{
             System.out.println("Loading movie embedding from Redis ...");
-            Set<String> movieEmbKeys = RedisClient.getInstance().keys(embKey + "*");
+            //先拿到前缀为embKey的各键组成的集合
+            Set<String> movieEmbKeys = JedisClient.getInstance().keys(embKey + "*");
+            //不用PipeLine的话一个个读取十分耗时，用PipeLine直接一次提交所有请求
+            Pipeline pipe = JedisClient.getInstance().pipelined();
+            Map<String, Response<String>> movieEmbMap = new HashMap<>(movieEmbKeys.size());
+            for(String movieEmbKey : movieEmbKeys){
+                movieEmbMap.put(movieEmbKey, pipe.get(movieEmbKey));
+            }
+            //以弱事务形式执行pipeline
+            pipe.sync();
+            //对结果进行操作
             int validEmbCount = 0;
-            for (String movieEmbKey : movieEmbKeys){
-                String movieId = movieEmbKey.split(":")[1];
+            for (Map.Entry<String, Response<String>> entry: movieEmbMap.entrySet()){
+                String movieId = entry.getKey().split(":")[1];
                 Movie m = getMovieById(Integer.parseInt(movieId));
-                if (null == m) {
-                    continue;
+                if (m != null) {
+                    m.setEmb(Utility.parseEmbStr(entry.getValue().get()));
+                    validEmbCount++;
                 }
-                m.setEmb(Utility.parseEmbStr(RedisClient.getInstance().get(movieEmbKey)));
-                validEmbCount++;
             }
             System.out.println("Loading movie embedding completed. " + validEmbCount + " movie embeddings in total.");
         }
@@ -217,15 +228,23 @@ public class DataManager {
     //load movie features
     private void loadMovieFeatures(String movieFeaturesPrefix) throws Exception{
         System.out.println("Loading movie features from Redis ...");
-        Set<String> movieFeaturesKeys = RedisClient.getInstance().keys(movieFeaturesPrefix + "*");
+        Set<String> movieFeaturesKeys = JedisClient.getInstance().keys(movieFeaturesPrefix + "*");
+        //创建管道
+        Pipeline pipe = JedisClient.getInstance().pipelined();
+        Map<String, Response<Map<String, String>>> mfMap = new HashMap<>(movieFeaturesKeys.size());
+        for(String movieFeaturesKey : movieFeaturesKeys){
+            mfMap.put(movieFeaturesKey, pipe.hgetAll(movieFeaturesKey));
+        }
+        pipe.sync();
+
         int validFeaturesCount = 0;
-        for (String movieFeaturesKey : movieFeaturesKeys){
-            String movieId = movieFeaturesKey.split(":")[1];
+        for (Map.Entry<String, Response<Map<String, String>>> entry: mfMap.entrySet()){
+            String movieId = entry.getKey().split(":")[1];
             Movie m = getMovieById(Integer.parseInt(movieId));
             if (null == m) {
                 continue;
             }
-            m.setMovieFeatures(RedisClient.getInstance().hgetAll(movieFeaturesKey));
+            m.setMovieFeatures(entry.getValue().get());
             validFeaturesCount++;
         }
         System.out.println("Loading movie features completed. " + validFeaturesCount + " movie features in total.");
@@ -233,7 +252,8 @@ public class DataManager {
 
     //load user embedding
     private void loadUserEmb(String userEmbPath, String embKey) throws Exception{
-        if (Config.EMB_DATA_SOURCE.equals(Config.DATA_SOURCE_FILE)) {
+        //2021.04.14 暂时都从文件系统中读取，redis中还没有userEmb
+        if (Config.EMB_DATA_SOURCE.equals(Config.DATA_SOURCE_FILE) || Config.EMB_DATA_SOURCE.equals(Config.DATA_SOURCE_REDIS)) {
             System.out.println("Loading user embedding from " + userEmbPath + " ...");
             int validEmbCount = 0;
             try (Scanner scanner = new Scanner(new File(userEmbPath))) {
@@ -284,9 +304,22 @@ public class DataManager {
             default:
         }
         //如果超过给定大小则给出子列表
-        if(movies.size() > size)
-            movies = movies.subList(0, size);
-        return movies;
+        return movies.subList(0, Math.min(movies.size(), size));
+    }
+
+    //Given a size and sortByMethod, order the movies and return a given size of List<Movie>
+    public List<Movie> getOrderedMovies(int size, SortByMethod method){
+        List<Movie> movies = new ArrayList<>(movieMap.values());
+        switch (method) {
+            case rating: //按评分排序
+                movies.sort((m1, m2) -> Double.compare(m2.getAverageRating(), m1.getAverageRating()));
+                break;
+            case releaseYear: //按上映年份排序
+                movies.sort((m1, m2) -> Integer.compare(m2.getReleaseYear(), m1.getReleaseYear()));
+                break;
+            default:
+        }
+        return movies.subList(0, Math.min(movies.size(), size));
     }
 
     //Get subMap of genre and its movieList by given pageSize

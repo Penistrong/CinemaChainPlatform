@@ -2,14 +2,14 @@ package com.penistrong.CinemaChainPlatform.online.serviceImpl;
 
 import com.penistrong.CinemaChainPlatform.online.datamanager.DataManager;
 import com.penistrong.CinemaChainPlatform.online.mapper.MovieMapper;
-import com.penistrong.CinemaChainPlatform.online.model.Movie;
-import com.penistrong.CinemaChainPlatform.online.model.SimilarityMethod;
-import com.penistrong.CinemaChainPlatform.online.model.SortByMethod;
+import com.penistrong.CinemaChainPlatform.online.model.*;
 import com.penistrong.CinemaChainPlatform.online.service.MovieService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.xml.crypto.Data;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class MovieServiceImpl implements MovieService {
@@ -32,6 +32,8 @@ public class MovieServiceImpl implements MovieService {
 
     /**
      * 生成相似电影推荐列表
+     * 单策略召回层，基于电影的风格标签快速过滤需要的Item
+     * 局限性较大，使用多路召回更好
      * @param movieId input movie's ID
      * @param size  Size of similar items
      * @param method Similarity calculating method
@@ -43,7 +45,13 @@ public class MovieServiceImpl implements MovieService {
         if(movie == null)
             return new ArrayList<>();
         //得到与该电影genre(可能有多个)相同的候选电影
-        List<Movie> candidates = generateCandidates(movie);
+        //List<Movie> candidates = generateCandidates(movie);
+        /*
+        List<Movie> userHistory = new ArrayList<>();
+        userHistory.add(DataManager.getInstance().getMovieById(movieId));
+        List<Movie> candidates = multiRetrievalCandidates(userHistory);
+         */
+        List<Movie> candidates = retrievalCandidatesByEmbedding(movie, size);
         //使用这些电影对应的Embedding的相关相似度计算方法排序这些候选电影
         List<Movie> rankedCandidates = ranker(movie, candidates, method);
 
@@ -141,4 +149,72 @@ public class MovieServiceImpl implements MovieService {
         //调用Embedding对象的相似度计算方法(使用余弦相似度)
         return movie.getEmb().calculateSimilarity(candidate.getEmb());
     }
+
+    /**
+     * 多路召回策略
+     * 根据电影的类别、评分和上映年份快速召回生成候选列表
+     * TODO:使用多线程并行，建立标签特征索引、建立常用召回集缓存等方法来进一步完善它
+     * @param userHistory 用户观影历史
+     * @return 多路召回策略生成的候选列表
+     */
+    public List<Movie> multiRetrievalCandidates(List<Movie> userHistory) {
+        //用HashSet存储genres，去重
+        HashSet<String> genres = new HashSet<>();
+        //用HashMap存储键值对，多路召回中可能存在重复的电影，去重
+        HashMap<Integer, Movie> candidateMap = new HashMap<>();
+        //策略①:根据用户观影历史中的各电影风格召回电影候选集
+        userHistory.forEach(m -> genres.addAll(m.getGenres()));
+        genres.forEach(genre -> {
+            DataManager.getInstance().getOrderedMoviesByGenre(genre, 20, SortByMethod.rating).forEach(candidate ->
+                    candidateMap.put(candidate.getMovieId(), candidate));
+        });
+        //策略②:召回所有电影中评分最高的100部电影
+        List<Movie> highRatingCandidates = DataManager.getInstance().getOrderedMovies(100, SortByMethod.rating);
+        highRatingCandidates.forEach(candidate -> candidateMap.put(candidate.getMovieId(), candidate));
+        //策略③:召回最新上映的100部电影
+        List<Movie> latestCandidates = DataManager.getInstance().getOrderedMovies(100, SortByMethod.releaseYear);
+        latestCandidates.forEach(candidate -> candidateMap.put(candidate.getMovieId(), candidate));
+        //候选集里去除用户观看过的电影
+        userHistory.forEach(watched_movie -> candidateMap.remove(watched_movie.getMovieId()));
+        //生成候选集
+        return new ArrayList<>(candidateMap.values());
+    }
+
+    /**
+     * 基于Embedding进行召回，利用物品和用户Embedding相似性来构建召回层
+     * 由Embedding的思想可知，可将多路召回中不同的召回策略作为附加信息融入Embedding向量中
+     * 多路找回中不同的召回策略产生的相似度、热度等分值不具备可比性，无法据此决定每个召回策略召回Item的数量
+     * 但是使用Embedding召回却可以把Embedding间的相似度作为唯一的判断标准，进而可以随意限定召回的候选集大小
+     * 且计算Embedding向量间的相似度也十分简单，比如点积和常用的余弦相似度
+     * @param movie 基于电影Embedding进行召回
+     * @return 基于Embedding进行召回的候选集
+     */
+    public List<Movie> retrievalCandidatesByEmbedding(Movie movie, int size){
+        if(movie == null || movie.getEmb() == null)
+            return null;
+        List<Movie> allCandidates = DataManager.getInstance().getOrderedMovies(10000, SortByMethod.rating);
+        HashMap<Movie, Double> movieScoreMap = new HashMap<>();
+        //逐一获取电影Embedding，并计算与用户Embedding的相似度
+        //TODO:使用局部敏感哈希快速找到邻近向量，而不是使用这个线性时间的计算
+        for(Movie candidate : allCandidates){
+            if (candidate.getEmb() == null)
+                continue;
+            movieScoreMap.put(candidate, candidate.getEmb().calculateSimilarity(movie.getEmb()));
+        }
+        //allCandidates.forEach(candidate -> movieScoreMap.put(candidate, candidate.getEmb().calculateSimilarity(userEmbedding)));
+
+        //使用Stream对Map按值降序排序
+        movieScoreMap = movieScoreMap.entrySet().stream()
+                .sorted(Map.Entry.<Movie, Double>comparingByValue().reversed())
+                .collect(
+                        Collectors.toMap(
+                                Map.Entry::getKey,
+                                Map.Entry::getValue,
+                                (oldVal, newVal) -> oldVal,
+                                LinkedHashMap::new
+                        )
+                );
+        return new ArrayList<>(movieScoreMap.keySet()).subList(0, Math.min(movieScoreMap.size(), size));
+    }
+
 }

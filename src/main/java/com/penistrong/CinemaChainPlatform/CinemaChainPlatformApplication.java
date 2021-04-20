@@ -1,6 +1,7 @@
 package com.penistrong.CinemaChainPlatform;
 
 import com.penistrong.CinemaChainPlatform.online.datamanager.DataManager;
+import com.penistrong.CinemaChainPlatform.online.util.Config;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.util.ResourceUtils;
@@ -11,7 +12,6 @@ import java.io.FileNotFoundException;
 public class CinemaChainPlatformApplication{
 
 	public static void main(String[] args) throws Exception{
-
 		//Initialize
 		String classPath = null;
 		try {
@@ -28,7 +28,7 @@ public class CinemaChainPlatformApplication{
 				classPath + "resources/dataset/ratings.csv",
 				classPath + "resources/modeldata/item2vecEmb.csv",
 				classPath + "resources/modeldata/userEmb.csv",
-				"i2vEmb", "uEmb");
+				Config.MOVIE_GRAPH_EMBEDDING_PREFIX_IN_REDIS, "uEmb");
 
 		//Server Start
 		SpringApplication.run(CinemaChainPlatformApplication.class, args);

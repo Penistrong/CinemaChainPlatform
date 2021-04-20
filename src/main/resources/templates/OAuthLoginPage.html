@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+<head th:replace="common/head :: header('Log in | Cinema Chain Platform', 'loginPage')">
+<body>
+    <a th:href="@{/user/login/oauth2/authorization/google}">
+        <span class="fa-stack fa-lg">
+            <i class="fa fa-circle fa-stack-2x"></i>
+            <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+          </span>
+    </a>
+</body>
+</html>
