@@ -13,11 +13,14 @@
 import os
 from collections import defaultdict
 import random
+import numpy as np
 import findspark
 import redis
 
 from pyspark import SparkConf
 from pyspark.mllib.feature import Word2Vec
+from pyspark.ml.feature import BucketedRandomProjectionLSH
+from pyspark.ml.linalg import Vectors
 from pyspark.sql.types import ArrayType, StringType
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
@@ -68,6 +71,32 @@ def processItemSequence(spark, rawSampleDataPath):
     return userSeq.select("movieIdStr").rdd.map(lambda x: x[0].split(' '))
 
 
+# 局部敏感哈希，使用多桶策略保证在常数时间内可以搜索到目标Item的Embedding最近邻，作为召回层生成候选列表
+# 使用Spark MLlib的LSH分桶模型:BucketedRandomProjectionLSHs
+def embeddingLSH(spark, movieEmbMap):
+    movieEmbSeq = []
+    for key, embedding_list in movieEmbMap.items():
+        embedding_list = [np.float64(embedding) for embedding in embedding_list]
+        movieEmbSeq.append((key, Vectors.dense(embedding_list)))
+
+    # 数据集准备，创建一个DataFrame
+    movieEmbDF = spark.createDataFrame(movieEmbSeq).toDF("movieId", "emb")
+    # 利用Spark MLlib 自带的分桶局部敏感哈希模型，其中numHashTables参数设定的是一个Embedding对应的桶数，即分桶函数的数量
+    bucketProjectionLSH = BucketedRandomProjectionLSH(inputCol="emb", outputCol="bucketId",
+                                                      bucketLength=0.1, numHashTables=3)
+    bucketModel = bucketProjectionLSH.fit(movieEmbDF)
+    embBucketResult = bucketModel.transform(movieEmbDF)
+    print("movieId, emb, bucketId schema:")
+    embBucketResult.printSchema()
+    print("movieId, emb, bucketId data result:")
+    embBucketResult.show(10, truncate=False)
+    print("Approximately searching for 5 nearest neighbors of the given sample embedding:")
+    # 给定一个Embedding向量，将其转换为Dense Vector
+    sampleEmb = Vectors.dense(0.795, 0.583, 1.120, 0.850, 0.174, -0.839, -0.0633, 0.249, 0.673, -0.237)
+    # 使用bucketProjectionLSH_model自带的函数寻找其最近邻
+    bucketModel.approxNearestNeighbors(dataset=movieEmbDF, key=sampleEmb, numNearestNeighbors=5).show(truncate=False)
+
+
 # 使用Word2vec模型训练得到Item2vec的Embedding向量
 def trainItem2vec(spark, samples, embLength, embOutputPath, redisKeyPrefix, saveToRedis=False):
     # 构造Word2vec网络模型结构
@@ -82,8 +111,8 @@ def trainItem2vec(spark, samples, embLength, embOutputPath, redisKeyPrefix, save
     for synonym, cosineSimilarity in synonyms:
         print(synonym, cosineSimilarity)
 
+    # 准备从训练完毕后的Word2vec中取出Embedding向量并存入目标文件夹中或redis中
     if not saveToRedis:
-        # 准备从训练完毕后的Word2vec中取出Embedding向量并存入目标文件夹中或redis中
         embOutputDir = '/'.join(embOutputPath.split('/')[:-1])  #
         if not os.path.exists(embOutputDir):
             os.mkdir(embOutputDir)
@@ -93,6 +122,7 @@ def trainItem2vec(spark, samples, embLength, embOutputPath, redisKeyPrefix, save
                 vectors = " ".join([str(emb) for emb in model.getVectors()[movie_id]])
                 file.write(movie_id + ":" + vectors + "\n")
     else:
+        # 将Item的Embedding写入Redis中
         redis_client = redis.StrictRedis(host='66.42.66.135', port='6379', db=0, password='chenliwei')
         expire_time = 60*60*24  # 设置缓存时间为24h
         # 使用Pipeline,否则每一次连接Redis都消耗一次RTT，过于慢了
@@ -100,12 +130,11 @@ def trainItem2vec(spark, samples, embLength, embOutputPath, redisKeyPrefix, save
         for movie_id in model.getVectors():
             vectors = " ".join([str(emb) for emb in model.getVectors()[movie_id]])
             pipe.set(redisKeyPrefix + ":" + movie_id, vectors)
+            # pipe.expire(redisKeyPrefix + ":" + movie_id, expire_time)  # 还没部署到线上，暂时不设置缓存时间
         # 执行管道里的各请求
         pipe.execute()
         redis_client.close()
 
-        # 将Item的Embedding写入Redis中
-    # TODO: embeddingLSH(spark, model.getVectors())
     return model
 
 
@@ -237,6 +266,9 @@ if __name__ == '__main__':
     model = trainItem2vec(spark, samples, embLength,
                           embOutputPath=file_context[8:] + "/modeldata/item2vecEmb.csv",
                           redisKeyPrefix="i2vEmb", saveToRedis=True)
+
+    # 测试局部敏感哈希搜索Embedding最近邻的效果
+    embeddingLSH(spark, model.getVectors())
 
     # 使用Graph Embedding生成样本
     graphEmbedding(samples, spark, embLength,

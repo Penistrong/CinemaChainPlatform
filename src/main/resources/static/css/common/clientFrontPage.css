@@ -637,6 +637,11 @@ a.plain-link:hover {
     display: inline-block;
 }
 
+.genre-title-link-wrapper:hover svg {
+    color: #f5c518;
+    transition: color 0.2s linear;
+}
+
 .genre-title .genre-title__text:before{
     background: #f5c518;
     border-radius: 2px;

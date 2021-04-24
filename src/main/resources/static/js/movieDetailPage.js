@@ -1,5 +1,8 @@
 /* DOM加载完毕后新建Vue实例 */
 $(document).ready(function(){
+    //将axios.js中的axios挂载到Vue的原生对象中
+    Vue.prototype.$axios = axios;
+
     var vm = new Vue({
         el: "#vue_load_similar_movie",
         data: {
@@ -29,23 +32,42 @@ $(document).ready(function(){
             this.getSimilarMovieRecList();
         },
         methods: {
-            getSimilarMovieRecList:function () {
+            getSimilarMovieRecList: function () {
+                this.$axios({
+                    method: 'post',
+                    url: '/movie/' + this.movieId + '/getSimilarMovieRecList',
+                    data: {
+                        size: 30
+                    }
+                })
+                    .then(r => {
+                        //注意与$.ajax不同的情况，回调中参数是一个包含axios.config在内的各种参数的对象，使用r.data取到真正的回调json数据
+                        $.each(r.data, function (index, similarMovie){
+                            vm.similarMovieList.push(similarMovie);
+                        })
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    });
+                /*
                 $.ajax({
                     type:'post',
                     url:'/movie/' + this.movieId + '/getSimilarMovieRecList',
                     data:{
-                        size : 30
+                        size: 30
                     },
-                    dataType: "json",
-                    success: function (similarMovieList){
+                    dataType: 'json',
+                    success: function (similarMovieList) {
                         $.each(similarMovieList, function (index, similarMovie){
                             vm.similarMovieList.push(similarMovie);
                             //console.log(similarMovie);
-                        })
+                        });
                     }
                 })
+                */
             },
             shuffle: function () {
+                //_.shuffle lodash或者underscore自带的函数
                 this.similarMovieList = _.shuffle(this.similarMovieList);
             },
             nextPage: function () {
@@ -59,7 +81,7 @@ $(document).ready(function(){
         },
         filters: {
             ratingFormat: function(value) {
-                //原数保留两位小数，乘100后进行上舍入再除以100
+                //评价分数保留两位小数，乘100后进行上舍入再除以100
                 return Math.ceil(value * 100) / 100;
             }
         }

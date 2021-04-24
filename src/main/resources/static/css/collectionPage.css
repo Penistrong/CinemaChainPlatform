@@ -1,0 +1,21 @@
+.movie-row .movie-row-bounds .movie-row-item{
+    display: block !important;
+}
+
+/* Vue transition */
+.block-list-move {
+    transition: transform 1s;
+}
+
+.block-list-item {
+    transition: all 1s;
+    display: inline-block;
+}
+.block-list-enter, .block-list-leave-to
+    /* .list-complete-leave-active for below version 2.1.8 */ {
+    opacity: 0;
+    transform: translateY(30px);
+}
+.block-list-leave-active {
+    position: absolute;
+}

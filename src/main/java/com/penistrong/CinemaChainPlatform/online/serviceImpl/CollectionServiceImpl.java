@@ -16,8 +16,7 @@ public class CollectionServiceImpl implements CollectionService {
 
     @Autowired
     private CollectionMapper collectionMapper;
-
-
+    
     @Override
     public PageInfo<Movie> getMoviesByGenre(String genre, Integer pageIndex, Integer pageSize) {
         PageHelper.startPage(pageIndex, pageSize);
