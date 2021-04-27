@@ -72,7 +72,7 @@ def processItemSequence(spark, rawSampleDataPath):
 
 
 # 局部敏感哈希，使用多桶策略保证在常数时间内可以搜索到目标Item的Embedding最近邻，作为召回层生成候选列表
-# 使用Spark MLlib的LSH分桶模型:BucketedRandomProjectionLSHs
+# 使用Spark MLlib的LSH分桶模型:BucketedRandomProjectionLSH
 def embeddingLSH(spark, movieEmbMap):
     movieEmbSeq = []
     for key, embedding_list in movieEmbMap.items():

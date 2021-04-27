@@ -177,24 +177,20 @@ def addUserFeatures(samplesWithMovieFeatures: DataFrame) -> DataFrame:
         .drop("genres", "userGenres", "userPositiveHistory") \
         .filter(F.col("userRatingCount") > 1)
 
-    samplesWithUserFeatures.printSchema()
-    samplesWithUserFeatures.show(10)
-    samplesWithUserFeatures.filter(samplesWithMovieFeatures['userId'] == 1).orderBy(F.col('timestamp').asc()).show(
-        truncate=False)
     return samplesWithUserFeatures
 
 
-# 将samplesWithUserFeature: DataFrame中的用户历史行为特征提取并存储到Redis中
-def extractAndSaveUserFeaturesToRedis(samplesWithUserFeature: DataFrame):
+# 将samplesWithMixedFeature: DataFrame中的用户历史行为特征(User feature)提取并存储到Redis中
+def extractAndSaveUserFeaturesToRedis(samplesWithMixedFeature: DataFrame):
     """
     Spark实现的来自SQL的写法
     使用F中的ROW_NUMBER()和OVER(PARTITION BY COLUMN ORDER BY COLUMN)给每个分组(partition，用窗口实现，按某列分组)中的元组按给定列进行升序或降序排列并分配序号row_num
     使用Filter只保留row_num==1的元组，即按时间戳排列的最新历史行为特征，空值用空串填充
     其实就是提取DataFrame中某用户的最近的历史行为特征(最新的一次评价产生的特征)，将其存入Redis
-    :param samplesWithUserFeature:
+    :param samplesWithMixedFeature:
     :return:
     """
-    userLatestSamples = samplesWithUserFeature \
+    userLatestSamples = samplesWithMixedFeature \
         .withColumn('userRowNum', F.row_number().over(Window.partitionBy('userId').orderBy(F.col('timestamp').desc()))) \
         .filter(F.col('userRowNum') == 1) \
         .select("userId", "userRatedMovie0", "userRatedMovie1", "userRatedMovie2", "userRatedMovie3", "userRatedMovie4",
@@ -204,7 +200,7 @@ def extractAndSaveUserFeaturesToRedis(samplesWithUserFeature: DataFrame):
 
     userLatestSamples.printSchema()
     userFeaturePrefix = "uf:"
-    redis_client = redis.StrictRedis(host=REDIS_ENDPOINT, port="6379", db=0, password=REDIS_AUTH)
+    redis_client = redis.StrictRedis(host=REDIS_ENDPOINT, port=REDIS_PORT, db=0, password=REDIS_AUTH)
     expire_time = 60*60*24*30  # 过期时间设定为一个月 DEV.version:设定15分钟TTL，观察redis的monitor
     # 开启pipeline
     pipe = redis_client.pipeline(transaction=True)
@@ -215,7 +211,7 @@ def extractAndSaveUserFeaturesToRedis(samplesWithUserFeature: DataFrame):
         userKey = userFeaturePrefix + sample['userId']
         valueDict = sample.asDict()
         # 去掉valueDict中的'userId'字段
-        valueDict.pop('userId', 'Unable to find userId in this Row!Sth. wired happened...')
+        valueDict.pop('userId', 'Unable to find userId in this Row!Sth. weird happened...')
         pipe.hset(name=userKey, mapping=valueDict)
         pipe.expire(name=userKey, time=expire_time)
 
@@ -225,21 +221,92 @@ def extractAndSaveUserFeaturesToRedis(samplesWithUserFeature: DataFrame):
     print("User features saved to redis successfully...")
 
 
+# 将samplesWithUserFeature: DataFrame中的电影特征(Item feature)提取并存储到Redis中
+def extractAndSaveMovieFeaturesToRedis(samplesWithMixedFeature: DataFrame):
+    movieLatestSamples = samplesWithMixedFeature \
+        .withColumn('movieRowNum', F.row_number().over(Window.partitionBy('movieId').orderBy(F.col('timestamp').desc()))) \
+        .filter(F.col('movieRowNum') == 1) \
+        .select("movieId", "releaseYear", "genre0", "genre1", "genre2", "movieRatingCount",
+                "movieAvgRating", "movieRatingStddev") \
+        .fillna("")
+
+    movieLatestSamples.printSchema()
+    movieLatestSamples.show()
+    movieFeaturePrefix = "mf:"
+    redis_client = redis.StrictRedis(host=REDIS_ENDPOINT, port=REDIS_PORT, db=0, password=REDIS_AUTH)
+    expire_time = 60*60*24*30  # 过期时间设定为一个月 DEV.version:设定15分钟TTL，观察redis的monitor
+    # 开启pipeline
+    pipe = redis_client.pipeline(transaction=True)
+
+    sampleArray: List[Row] = movieLatestSamples.collect()
+    print("total movie features num: {}".format(len(sampleArray)))
+    for sample in sampleArray:
+        movieKey = movieFeaturePrefix + sample['movieId']
+        valueDict = sample.asDict()
+        # 去掉'movieId'字段
+        valueDict.pop('movieId', 'Unable to find movieId in this Row!Sth. weird happened...')
+        pipe.hset(name=movieKey, mapping=valueDict)
+        pipe.expire(name=movieKey, time=expire_time)
+
+    pipe.execute()
+    redis_client.close()
+    print("Movie features saved to Redis successfully...")
+
+
+# 将处理得到的混合特征样本随机分配为训练集和测试集并离线保存
+def splitAndSaveTraingTestSamples(samplesWithMixedFeature: DataFrame, file_path: string, byTimeStamp=False):
+    if not byTimeStamp:
+        # Generate a smaller sample dataset for demo
+        smallSamples = samplesWithMixedFeature.sample(fraction=0.1)
+        # Split training and test dataset by 8:2
+        training, test = samplesWithMixedFeature.randomSplit(weights=(0.8, 0.2))
+    else:
+        smallSamples = samplesWithMixedFeatures.sample(0.1).withColumn("timestampLong", F.col("timestamp").cast(LongType()))
+        # 使用Spark求分位数的方法，在timestampLong这列上求所有时间戳中位于80%位置的分位数
+        quantile = smallSamples.stat.approxQuantile(col="timestampLong", probabilities=[0.8], relativeError=0.05)
+        # 拿到分位数
+        splitTimestamp = quantile[0]
+        # 小于该分位数的80%样本作为训练集
+        training = smallSamples.where(F.col("timestampLong") <= splitTimestamp).drop("timestampLong")
+        # 大于该分位数的20%样本作为测试集
+        test = smallSamples.where(F.col("timestampLong") > splitTimestamp).drop("timestampLong")
+
+    # Establish saved path
+    trainingSavePath = file_path + '/trainingSamples.csv'
+    testSavePath = file_path + '/testSamples.csv'
+    # Write into path by .csv format
+    # Use repartition(1) to force computing on single partition but this will cause performance defects
+    # TODO:Consider merge .csv files by partitions instead of single partition
+    training.repartition(1).write.option("header", "true").mode('overwrite').csv(trainingSavePath)
+    test.repartition(1).write.option("header", "true").mode('overwrite').csv(testSavePath)
+
+
 if __name__ == '__main__':
     conf = SparkConf().setAppName('FeatureEngineering').setMaster('local')
     spark = SparkSession.builder.config(conf=conf).getOrCreate()
-    ratingDataPath = 'E:/workspace/CinemaChainPlatform/src/main/resources/resources/dataset/ratings.csv'
+    context_data_path = 'E:/workspace/CinemaChainPlatform/src/main/resources/resources'
+    ratingDataPath = context_data_path + '/dataset/ratings.csv'
     ratingSamples = spark.read.format('csv').option('header', 'true').load(ratingDataPath)
     ratingSamplesWithLabel = addSampleLabel(ratingSamples)
     ratingSamplesWithLabel.show()
 
-    movieDataPath = 'E:/workspace/CinemaChainPlatform/src/main/resources/resources/dataset/movies.csv'
+    movieDataPath = context_data_path + '/dataset/movies.csv'
     movieSamples = spark.read.format('csv').option('header', 'true').load(movieDataPath)
+    # DataFrame中添加电影特征
     samplesWithMovieFeatures = addMovieFeatures(movieSamples, ratingSamplesWithLabel)
     samplesWithMovieFeatures.printSchema()
     samplesWithMovieFeatures.show(10, truncate=False)
 
-    samplesWithUserFeatures = addUserFeatures(samplesWithMovieFeatures)
+    # DataFrame中再加上用户特征，形成拥有混合特征的样本
+    samplesWithMixedFeatures = addUserFeatures(samplesWithMovieFeatures)
+    samplesWithMixedFeatures.printSchema()
+    samplesWithMixedFeatures.show(10)
+    samplesWithMixedFeatures.filter(samplesWithMovieFeatures['userId'] == 1).orderBy(F.col('timestamp').asc()).show(
+        truncate=False)
 
-    # 存储到Redis中
-    extractAndSaveUserFeaturesToRedis(samplesWithUserFeatures)
+    # 处理前述得到的混合特征样本，存储到Redis中
+    extractAndSaveUserFeaturesToRedis(samplesWithMixedFeatures)
+    extractAndSaveMovieFeaturesToRedis(samplesWithMixedFeatures)
+
+    # 离线训练得到的混合特征样本分为训练集和测试集后存储到本地
+    splitAndSaveTraingTestSamples(samplesWithMixedFeatures, context_data_path + '/sampledata')
