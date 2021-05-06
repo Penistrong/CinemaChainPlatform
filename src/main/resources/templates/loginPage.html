@@ -1,15 +1,63 @@
 <!DOCTYPE html>
 <html lang="zh-CN" xmlns="http://www.w3.org/1999/html" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>登录</title>
+<head th:replace="common/head :: header('Login | Cinema Chain Platform', 'loginPage')">
 </head>
 <body>
-    <form action="/user/login">
-        UserName: <label><input type="text" name="username"></label><br>
-        Password: <label><input type="password" name="password"></label><br>
-        <input type="submit" value="Submit">
-    </form>
+    <div class="container">
+        <div class="banner__brand">
+            <a th:href="@{/homepage}">
+                <svg width="800" height="300" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Created with Method Draw - http://github.com/duopixel/Method-Draw/ -->
+                    <g>
+                        <title>Brand Layer</title>
+                        <text stroke="#000" transform="matrix(11.105262756347656,0,0,1,-8796.631229400635,0) " xml:space="preserve" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="24" id="svg_2" y="399.05" x="870.5" stroke-width="0" fill="#000000"/>
+                        <text transform="matrix(1,0,0,1,0,0) " stroke="#000000" font-weight="bold" font-style="italic" xml:space="preserve" text-anchor="start" font-family="'Times New Roman', Times, serif" font-size="52" id="svg_4" y="168.101563" x="141.390625" stroke-width="0" fill="#ffffff">Cinema Chain Platform</text>
+                        <path d="m803.5,454.049988c0,-1 -0.765381,-2.152252 0,-4c0.541199,-1.306549 2.385071,-4.372009 5,-8c1.653809,-2.294525 4.190308,-6.881531 6,-10c2.24469,-3.867981 3.679443,-6.571106 6,-11c1.467651,-2.801086 3.337463,-6.309998 5,-9c1.487,-2.406006 3,-5 4,-6c2,-2 2.852722,-3.173096 4,-4c1.813965,-1.307465 3.292908,-2.292908 4,-3c0.707092,-0.707092 2.292908,-0.292908 3,-1c0.707092,-0.707092 1,-1 2,-2c1,-1 2.026733,-0.770233 3,-1c2.17627,-0.513733 4,-1 6,-1c1,0 3.0979,-1.824432 5,-3c3.402588,-2.102936 8,-1 15,-1c5,0 13,0 20,0c8,0 17.04187,-0.291443 25,1c10.066345,1.633545 20.043518,2.732086 27,4c9.070129,1.653137 16.898132,3.399017 24,5c5.933838,1.337677 12.041321,1.847229 16,3c3.036194,0.884125 6.080261,2.31073 9,3c2.17627,0.513733 4.372009,1.385101 8,4c1.147278,0.826904 3.31073,2.534912 5,4c2.388977,2.07193 4,2 6,3l1,1l1,1l1,0" id="svg_6" stroke-width="0" stroke="#000" fill="none"/>
+                        <path d="m937.5,424.049988c-1,0 -0.692566,0.186005 -2,2c-0.826904,1.147278 -3.692383,3.410919 -7,8c-2.614929,3.627991 -4.413635,6.625305 -8,11c-2.285889,2.78833 -4,6 -6,9c-2,3 -2.917603,4.386871 -4,7c-0.38269,0.923889 -1,2 -2,2l0,1l0,1l0,1" id="svg_7" stroke-width="0" stroke="#000" fill="none"/>
+                    </g>
+                </svg>
+            </a>
+        </div>
+        <div class="col-md-6 col-md-offset-3" id="login-register-dialog">
+            <el-tabs v-model="activeTab" type="border-card" stretch>
+                <el-tab-pane name="loginTab">
+                    <span slot="label"><i class="el-icon-user-solid"></i> 登录</span>
+                    <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="100px" class="loginRuleForm">
+                        <el-form-item label="用户名" prop="username" :error="ruleForm.nameErrorMsg">
+                            <el-input v-model="ruleForm.username" autocomplete="off"></el-input>
+                        </el-form-item>
+                        <el-form-item label="密码" prop="password" :error="ruleForm.pwdErrorMsg">
+                            <el-input type="password" v-model="ruleForm.password" autocomplete="off"></el-input>
+                        </el-form-item>
+                        <el-form-item>
+                            <el-button type="primary" @click="login('ruleForm')" v-loading="ruleForm.loading" :disabled="ruleForm.loading">登录</el-button>
+                            <el-button @click="resetForm('ruleForm')">清空</el-button>
+                        </el-form-item>
+                    </el-form>
+                </el-tab-pane>
+                <el-tab-pane name="registerTab">
+                    <span slot="label"><i class="el-icon-user"></i> 注册</span>
+                    <el-form :model="regRuleForm" status-icon :rules="regRules" ref="regRuleForm" label-width="100px" class="regRuleForm">
+                        <el-form-item label="用户名" prop="username" :error="regRuleForm.nameErrorMsg" required>
+                            <el-input v-model="regRuleForm.username" autocomplete="off"></el-input>
+                        </el-form-item>
+                        <el-form-item label="密码" prop="password" required>
+                            <el-input v-model="regRuleForm.password" type="password" autocomplete="off"></el-input>
+                        </el-form-item>
+                        <el-form-item label="确认密码" prop="checkPassword" required>
+                            <el-input v-model="regRuleForm.checkPassword" type="password" autocomplete="off"></el-input>
+                        </el-form-item>
+                        <el-form-item>
+                            <el-button type="primary" @click="register('regRuleForm')" v-loading="regRuleForm.loading" :disabled="regRuleForm.loading">注册</el-button>
+                            <el-button @click="resetForm('regRuleForm')">清空</el-button>
+                        </el-form-item>
+                    </el-form>
+                </el-tab-pane>
+            </el-tabs>
+        </div>
+    </div>
+
+    <footer th:replace="common/footer::footer"></footer>
 
 </body>
 </html>

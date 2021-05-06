@@ -1,8 +1,5 @@
 /* DOM加载完毕后新建Vue实例 */
 $(document).ready(function(){
-    //将axios.js中的axios挂载到Vue的原生对象中
-    Vue.prototype.$axios = axios;
-
     var vm = new Vue({
         el: "#vue_load_similar_movie",
         data: {
@@ -29,6 +26,7 @@ $(document).ready(function(){
             }
         },
         mounted: function(){
+            //获取相似电影推荐列表
             this.getSimilarMovieRecList();
         },
         methods: {
@@ -45,26 +43,14 @@ $(document).ready(function(){
                         $.each(r.data, function (index, similarMovie){
                             vm.similarMovieList.push(similarMovie);
                         })
+                        //获取推荐列表中各电影是否在当前登录用户的待看列表里
+                        //注意只能写在获得了推荐列表后的回调里，否则因为axios的异步，若直接在mounted里顺序执行函数
+                        //会导致发送请求时，电影列表为空
+                        this.getIsInWatchList();
                     })
                     .catch(error => {
                         console.log(error);
                     });
-                /*
-                $.ajax({
-                    type:'post',
-                    url:'/movie/' + this.movieId + '/getSimilarMovieRecList',
-                    data:{
-                        size: 30
-                    },
-                    dataType: 'json',
-                    success: function (similarMovieList) {
-                        $.each(similarMovieList, function (index, similarMovie){
-                            vm.similarMovieList.push(similarMovie);
-                            //console.log(similarMovie);
-                        });
-                    }
-                })
-                */
             },
             shuffle: function () {
                 //_.shuffle lodash或者underscore自带的函数
@@ -77,6 +63,33 @@ $(document).ready(function(){
             prevPage: function () {
                 if (!this.isFirstPage)
                     this.curPageIndex--;
+            },
+            /*
+                由于movie是由v-for渲染出来的，要给循环中出现的每个movie添加一个isInWatchList属性值，并据此控制添加与移出的切换逻辑
+                axios执行PUSH的回调函数中调用该函数，向后台请求similarMovieList中各movie是否在当前用户的待看列表中
+                如果要给已经创建的实例中的某对象添加新的根级响应元素，如果该元素事先未定义那么其不会响应，视图不会更新
+                这个时候使用vm.$set(object, key, value)绑定新的响应属性
+            */
+            getIsInWatchList: function() {
+                this.$axios({
+                    method: 'post',
+                    url: '/watchlist/getIsInWatchList',
+                    data: this.similarMovieList.map(movie => {return movie.movieId})
+                })
+                    .then(r => {
+                        //返回值是一个Map
+                        $.each(r.data, function(key, value){
+                            //注意key(movieId)拿出来时解析为String了，用Number转换后使用过滤器找到其对应的对象
+                            //filter返回的是一个Array，由于movieId唯一，因此Array中只有一个对象
+                            movie = vm.similarMovieList.filter(movie => {return movie.movieId === Number.parseInt(key)})[0];
+                            vm.$set(movie, "isInWatchList", value);
+                            //设置Bool变量控制加载动画(实际是SVG替换，ElementsUI的loading太丑了)
+                            vm.$set(movie, "watchListLoading", false);
+                        })
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    })
             }
         },
         filters: {
@@ -84,6 +97,9 @@ $(document).ready(function(){
                 //评价分数保留两位小数，乘100后进行上舍入再除以100
                 return Math.ceil(value * 100) / 100;
             }
+        },
+        components: {
+            'watchlist-ribbon' : watchListRibbon
         }
     })
 })

@@ -140,7 +140,7 @@ public class RedisUtils {
      * @param map 对应多个键值
      * @return true 成功 false 失败
      */
-    public boolean hsetAll(String key, Map<String, Object> map) {
+    public boolean hmset(String key, Map<String, Object> map) {
         redisTemplate.opsForHash().putAll(key, map);
         return true;
     }

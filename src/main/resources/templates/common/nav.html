@@ -36,7 +36,10 @@
                         <a th:href="@{/forum}">Forum</a>
                     </li>
                     <li>
-                        <a th:href="@{/userpage}">User</a>
+                        <!-- if user logged in -->
+                        <a th:if="${session.userId}" th:href="@{|/user/${session.userId}|}">User</a>
+                        <!-- else user not log in -->
+                        <a th:if="${session.userId == null || session.userId == ''}" th:href="@{/user/login}">Login</a>
                     </li>
                     <li class="search-icon">
                         <a href="javascript:void(0)">

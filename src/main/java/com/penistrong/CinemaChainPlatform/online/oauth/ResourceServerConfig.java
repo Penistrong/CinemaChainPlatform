@@ -22,9 +22,11 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
         http.authorizeRequests()
                 .antMatchers( "/druid/**",
                         "/user/login/**",
+                        "/user/register/**",
                         "/homepage",
                         "/movie/**",
-                        "/collection/**").permitAll() //主页、电影详情页、电影分类页不登录均可访问
+                        "/collection/**",
+                        "/watchlist/**").permitAll() //主页、电影详情页、电影分类页不登录均可访问
                 .antMatchers("/admin/**").hasRole("admin")
                 .antMatchers("/user/**").hasRole("user")
                 .anyRequest().authenticated();

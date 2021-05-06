@@ -1,17 +1,24 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 """
-@File    :   EmbeddingMLP.py
-@Time    :   2021/04/27 16:54:10
+@File    :   WideNDeep.py
+@Time    :   2021/04/30 18:54:10
 @Author  :   Penistrong
 @Version :   1.0
 @Contact :   770560618@qq.com
-@Desc    :   Establish EmbeddingMLP classical DNN model
+@Desc    :   Google Wide&Deep model
 """
 
 # here put the import lib
 import tensorflow as tf
 
+"""
+Google的Wide&Deep模型，Wide部分负责模型的记忆能力，Deep部分负责模型的泛化能力
+①记忆能力:模型直接学习历史数据中物品或特征的共现频率，并将其直接作为推荐依据的能力
+②泛化能力:模型对于新样本及从未出现过的特征组合的预测能力,也是DNN模型在推荐系统中主要负责的部分
+"""
+
+# 以下数据处理部分(包含类别型特征和数值型特征)与EmbeddingMLP中如出一辙
 # TODO:基于MovieLens数据集的分片得到，若要使用原始数据集这里要进行更改!
 MOVIE_NUMS = 1000
 USER_NUMS = 30000
@@ -45,13 +52,6 @@ test_data = load_dataset(test_samples_file_path)
 genre_vocab = ['Film-Noir', 'Action', 'Adventure', 'Horror', 'Romance', 'War', 'Comedy', 'Western', 'Documentary',
                'Sci-Fi', 'Drama', 'Thriller',
                'Crime', 'Fantasy', 'Animation', 'IMAX', 'Mystery', 'Children', 'Musical']
-
-"""
-基于微软的DeepCrossing模型结构
-Feature层有类别型特征和数值型特征两种，在输入Stacking层(也叫Concatenate层)前其策略不同:
-①类别型特征是经过One-hot编码后生成的特征向量，过于稀疏，要经过Embedding层转换为较为稠密的Embedding向量，注意每一种特征对应其特有的Embedding层
-②数值型特征直接输入
-"""
 
 GENRE_FEATURE = {
     'userGenre0': genre_vocab,
@@ -101,33 +101,61 @@ numerical_columns = [tf.feature_column.numeric_column('releaseYear'),
                      tf.feature_column.numeric_column('userAvgRating'),
                      tf.feature_column.numeric_column('userRatingStddev')]
 
-# 构建Embedding+MLP模型架构
-preprocessing_layer = tf.keras.layers.DenseFeatures(numerical_columns + categorical_columns)
+# 数据处理部分的Extra处(同EmbeddingMLP中使用的基础数据处理)
+# TODO:针对业务场景，设计相关规则，形成交叉特征
+# 将当前评价电影和用户历史最新评价的电影组成交叉特征，目的是让模型记住“喜欢电影A的用户也会喜欢电影B”的效果
+rated_movie = tf.feature_column.categorical_column_with_identity(key='userRatedMovie0', num_buckets=MOVIE_NUMS+1)
+crossed_feature = tf.feature_column.indicator_column(tf.feature_column.crossed_column([movie_col, rated_movie], 10000))
 
-model = tf.keras.Sequential([
-    # Feature+Embedding层
-    preprocessing_layer,
-    # Concatenate层(全连接层),没有像DeepCrossing那样使用多层残差网络,使用隐含层经常使用的ReLU作为激活函数
-    tf.keras.layers.Dense(128, activation='relu'),
-    tf.keras.layers.Dense(128, activation='relu'),
-    # 前述根据评分对样本贴了0-1标签，即这里要解决的是一个类CTR的二分类预估，故输出层只要一个sigmoid神经元
-    tf.keras.layers.Dense(1, activation='sigmoid')
-])
+# 不同于Sequential Model，Wide&Deep的Deep和Wide部分都要用到输入的某些或全部特征，所以要定义输入列
+inputs = {
+    'movieAvgRating': tf.keras.layers.Input(name='movieAvgRating', shape=(), dtype='float32'),
+    'movieRatingStddev': tf.keras.layers.Input(name='movieRatingStddev', shape=(), dtype='float32'),
+    'movieRatingCount': tf.keras.layers.Input(name='movieRatingCount', shape=(), dtype='int32'),
+    'userAvgRating': tf.keras.layers.Input(name='userAvgRating', shape=(), dtype='float32'),
+    'userRatingStddev': tf.keras.layers.Input(name='userRatingStddev', shape=(), dtype='float32'),
+    'userRatingCount': tf.keras.layers.Input(name='userRatingCount', shape=(), dtype='int32'),
+    'releaseYear': tf.keras.layers.Input(name='releaseYear', shape=(), dtype='int32'),
 
-# 编译模型，设置损失函数、优化器、评价指标(这里设置为准确度,ROC,PR)
+    'movieId': tf.keras.layers.Input(name='movieId', shape=(), dtype='int32'),
+    'userId': tf.keras.layers.Input(name='userId', shape=(), dtype='int32'),
+    'userRatedMovie0': tf.keras.layers.Input(name='userRatedMovie0', shape=(), dtype='int32'),
+
+    'userGenre0': tf.keras.layers.Input(name='userGenre0', shape=(), dtype='string'),
+    'userGenre1': tf.keras.layers.Input(name='userGenre1', shape=(), dtype='string'),
+    'userGenre2': tf.keras.layers.Input(name='userGenre2', shape=(), dtype='string'),
+    'userGenre3': tf.keras.layers.Input(name='userGenre3', shape=(), dtype='string'),
+    'userGenre4': tf.keras.layers.Input(name='userGenre4', shape=(), dtype='string'),
+    'genre0': tf.keras.layers.Input(name='genre0', shape=(), dtype='string'),
+    'genre1': tf.keras.layers.Input(name='genre1', shape=(), dtype='string'),
+    'genre2': tf.keras.layers.Input(name='genre2', shape=(), dtype='string'),
+}
+
+# Wide&Deep model architecture
+# Part 'Deep':沿用EmbeddingMLP的模型结构
+deep = tf.keras.layers.DenseFeatures(numerical_columns + categorical_columns)(inputs)
+# 注意Google自己的模型实现中，一共三层全连接层，分别为1024,512,256，这里用的是EmbeddingMLP的
+deep = tf.keras.layers.Dense(128, activation='relu')(deep)
+deep = tf.keras.layers.Dense(128, activation='relu')(deep)
+
+# Part 'Wide':交叉特征已经求出(可以视为已经过交叉积变换层)直接作为单一一层输入，并准备连接至LogLoss层
+wide = tf.keras.layers.DenseFeatures(crossed_feature)(inputs)
+
+# 将Wide部分和Deep部分连接到一起
+both = tf.keras.layers.concatenate([deep, wide])
+
+# 输出层，使用一个sigmoid神经元，老样子二分类
+output = tf.keras.layers.Dense(1, activation='sigmoid')(both)
+
+model = tf.keras.Model(inputs, output)
+
 model.compile(
-    loss="binary_crossentropy",
+    loss='binary_crossentropy',
     optimizer='adam',
-    metrics=['accuracy', tf.keras.metrics.AUC(curve='ROC'), tf.keras.metrics.AUC(curve='PR')]
-)
+    metrics=['accuracy', tf.keras.metrics.AUC(curve='ROC'), tf.keras.metrics.AUC(curve='PR')])
 
-# 训练模型
 model.fit(train_data, epochs=5)
 
-# 模型概览
-model.summary()
-
-# 使用测试集评估模型
 test_loss, test_accuracy, test_roc_auc, test_pr_auc = model.evaluate(test_data)
 print('\n\nTest Loss : {}\nTest Accuracy : {}\nTest ROC AUC : {}\nTest PR AUC : {}\n'.format(test_loss, test_accuracy,
                                                                                              test_roc_auc, test_pr_auc))

@@ -62,6 +62,30 @@ public class MovieServiceImpl implements MovieService {
     }
 
     /**
+     * 给定movieId列表，查询其中各movie是否在当前user的待看列表中
+     * @param userId 用户Id
+     * @param movieIdList 待查询的movieId列表
+     * @return res <K: movieId, V: isInWatchList>
+     */
+    @Override
+    public Map<Integer, Boolean> queryIsInWatchList(int userId, List<Integer> movieIdList) {
+        return movieIdList.stream().collect(Collectors.toMap(
+                movieId -> movieId,
+                movieId -> this.movieMapper.selectMovieInWatchList(userId, movieId) > 0
+                ));
+    }
+
+    @Override
+    public boolean addWatchList(int userId, int movieId) {
+        return this.movieMapper.insertMovieIntoWatchList(userId, movieId) > 0;
+    }
+
+    @Override
+    public boolean delWatchList(int userId, int movieId) {
+        return this.movieMapper.deleteMovieFromWatchList(userId, movieId) > 0;
+    }
+
+    /**
      * generate candidates for similar movies recommendation
      * @param movie input movie object
      * @return recommended movie candidates

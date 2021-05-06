@@ -5,6 +5,7 @@ import com.penistrong.CinemaChainPlatform.online.model.SimilarityMethod;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public interface MovieService {
     HashMap<String, List<Movie>> getMoviesFromDataManager(Integer pageIndex, Integer pageSize, Integer listSize);
@@ -12,4 +13,10 @@ public interface MovieService {
     Movie getMovieFromDataManager(int movieId);
 
     List<Movie> getSimilarMovieRecList(int movieId, int size, SimilarityMethod method);
+
+    Map<Integer, Boolean> queryIsInWatchList(int userId, List<Integer> movieIdList);
+
+    boolean addWatchList(int userId, int movieId);
+
+    boolean delWatchList(int userId, int movieId);
 }

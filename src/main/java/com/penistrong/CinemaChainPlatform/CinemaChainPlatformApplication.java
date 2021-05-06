@@ -28,7 +28,8 @@ public class CinemaChainPlatformApplication{
 				classPath + "resources/dataset/ratings.csv",
 				classPath + "resources/modeldata/item2vecEmb.csv",
 				classPath + "resources/modeldata/userEmb.csv",
-				Config.MOVIE_GRAPH_EMBEDDING_PREFIX_IN_REDIS, "uEmb");
+				Config.MOVIE_GRAPH_EMBEDDING_PREFIX_IN_REDIS,
+				Config.USER_EMBEDDING_PREFIX_IN_REDIS);
 
 		//Server Start
 		SpringApplication.run(CinemaChainPlatformApplication.class, args);

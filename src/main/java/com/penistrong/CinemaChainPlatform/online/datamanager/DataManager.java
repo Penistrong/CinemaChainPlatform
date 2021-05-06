@@ -50,7 +50,7 @@ public class DataManager {
         loadRatingData(ratingDataPath);
         loadMovieEmb(movieEmbPath, movieRedisKey);
         if (Config.IS_LOAD_ITEM_FEATURE_FROM_REDIS){
-            loadMovieFeatures("mf:");
+            loadMovieFeatures(Config.MOVIE_FEATURE_PREFIX_IN_REDIS);
         }
 
         loadUserEmb(userEmbPath, userRedisKey);

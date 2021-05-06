@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns="http://www.w3.org/1999/html" xmlns:th="http://www.thymeleaf.org">
+
+<div th:fragment="login-dialog">
+    <a @click="loginDialogVisible = true">Login</a>
+
+    <el-dialog :visible.sync="loginDialogVisible" width="30%" center>
+        <!-- Dialog里使用标签页切换登录注册 -->
+        <el-tabs type="border-card" stretch="true">
+            <el-tab-pane>
+                <span slot="label"><i class="el-icon-user-solid"></i> 登录</span>
+                <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="100px" class="loginRuleForm">
+                    <el-form-item label="用户名" prop="username">
+                        <el-input v-model="ruleForm.username" autocomplete="off"></el-input>
+                    </el-form-item>
+                    <el-form-item label="密码" prop="password">
+                        <el-input type="password" v-model="ruleForm.password" autocomplete="off"></el-input>
+                    </el-form-item>
+                </el-form>
+            </el-tab-pane>
+            <el-tab-pane>
+                <span slot="label"><i class="el-icon-user"></i> 注册</span>
+            </el-tab-pane>
+        </el-tabs>
+        <div slot="footer" class="dialog-footer">
+            <el-button type="primary" @click="login('ruleForm')">登录</el-button>
+            <el-button @click="resetForm('ruleForm')">重置</el-button>
+        </div>
+    </el-dialog>
+</div>
+
+</html>

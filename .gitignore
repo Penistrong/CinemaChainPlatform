@@ -9,6 +9,9 @@ target/
 **/sampledata/testSamples.csv
 **/sampledata/trainingSamples.csv
 
+### saved model ###
+**/resources/model/
+
 ### STS ###
 .apt_generated
 .classpath

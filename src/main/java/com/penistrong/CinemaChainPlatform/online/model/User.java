@@ -21,6 +21,7 @@ public class User {
     //OAuth2 authentication
     private String username;
     private String password;
+    private Boolean enabled;
 
     @JsonSerialize(using = RatingListSerializer.class)
     List<Rating> ratings;
@@ -128,5 +129,13 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
     }
 }

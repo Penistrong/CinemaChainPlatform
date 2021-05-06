@@ -687,5 +687,60 @@ a.plain-link:hover {
     flex-shrink: 0;
 }
 
+/* Watch list function StyleSheet */
+.watchlist-ribbon{
+    cursor: pointer;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 3;
+    font-size: 2.4rem;
+    width: 3.2rem;
+    height: 4.1rem;
+    color: #fff;
+}
+
+.watchlist-ribbon__bg{
+    position: relative;
+    width: 100%;
+    height: auto;
+    transition: stroke .2s ease-in-out;
+}
+
+.watchlist-ribbon__bg-ribbon{
+    fill: rgba(31,31,31,0.75);
+    stroke: rgba(255,255,255,0.08);
+}
+
+.watchlist-ribbon__bg-hover{
+    opacity: 0;
+    transition: opacity .2s ease-in-out;
+}
+
+.watchlist-ribbon:hover .watchlist-ribbon__bg-hover{
+    opacity: 0.5;
+}
+
+.watchlist-ribbon__bg-shadow{
+    fill: rgba(0,0,0,0.32);
+}
+
+.watchlist-ribbon__icon{
+    position: absolute;
+    top: .2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 1em;
+}
+
+.watchlist-ribbon__inWatchList .watchlist-ribbon__bg-ribbon {
+    fill: #f5c518;
+}
+
+.watchlist-ribbon__inWatchList .watchlist-ribbon__icon {
+    color: #000;
+}
 
 

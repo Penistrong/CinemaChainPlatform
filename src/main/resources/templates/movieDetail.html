@@ -148,6 +148,7 @@
                                     <div class="movie-card-smart">
                                         <div class="movie-card-md1">
                                             <div class="card">
+                                                <watchlist-ribbon v-bind:movie.sync="movie"></watchlist-ribbon>
                                                 <div class="link-or-emit">
                                                     <a v-bind:href="`/movie/${movie.movieId}`">
                                                     <span>
