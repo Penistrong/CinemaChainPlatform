@@ -1,6 +1,4 @@
 $(document).ready(function(){
-    //将axios.js中的axios挂载到Vue的原生对象中
-    Vue.prototype.$axios = axios;
     //注册分页组件
     //注意 el-pagination里的layout里选择的各组件要以逗号分隔，否则报错Could not read property: key
     //另外，使用el-pagination组件时，在pageSize和current-page上都要使用.sync修饰符，双向绑定，以免父组件无法监听到对应变量的变化，导致不产生响应

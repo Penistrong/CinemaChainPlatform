@@ -23,7 +23,7 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
                 .antMatchers( "/druid/**",
                         "/user/login/**",
                         "/user/register/**",
-                        "/homepage",
+                        "/homepage/**",
                         "/movie/**",
                         "/collection/**",
                         "/watchlist/**").permitAll() //主页、电影详情页、电影分类页不登录均可访问

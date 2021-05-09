@@ -1,21 +1,25 @@
 package com.penistrong.CinemaChainPlatform.online.model;
 
+
 /**
  * Rating Class, contains attributes loaded from movielens ratings.csv
  */
 public class Rating {
-    int movieId;
     int userId;
+    int movieId;
     float score;
     long timestamp;
 
-    public int getMovieId() {
-        return movieId;
+    public Rating() {
     }
 
-    public void setMovieId(int movieId) {
+    public Rating(int userId, int movieId, float score, long timestamp) {
+        this.userId = userId;
         this.movieId = movieId;
+        this.score = score;
+        this.timestamp = timestamp;
     }
+
 
     public int getUserId() {
         return userId;
@@ -23,6 +27,14 @@ public class Rating {
 
     public void setUserId(int userId) {
         this.userId = userId;
+    }
+
+    public int getMovieId() {
+        return movieId;
+    }
+
+    public void setMovieId(int movieId) {
+        this.movieId = movieId;
     }
 
     public float getScore() {

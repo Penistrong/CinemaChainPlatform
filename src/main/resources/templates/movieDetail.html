@@ -8,22 +8,26 @@
     <header th:replace="common/intro-header::intro-header-movieDetail(${movie.title}, ${movie.movieId})"></header>
     <input style="display: none" id="movieIdContainer" th:value="${movie.movieId}">
     <div class="container">
-        <div id="movieDetailsContainer" class="panel-body movie-details-section">
+        <div id="movieDetailsContainer" class="panel-body movie-details-section" v-if="movie.movieId !== undefined">
                 <div class="col-md-3 movie-details-poster">
-                    <img th:src="@{|/posters/${movie.movieId}.jpg|}" th:alt="${movie.title}"/>
+                    <el-image :src="`/posters/${movie.movieId}.jpg`" :alt="movie.title" style="width: 100%">
+                        <div slot="placeholder" class="image-slot">
+                            <i class="el-icon-picture-outline"></i>
+                        </div>
+                    </el-image>
                 </div>
                 <div class="col-md-9">
-                    <h1 th:text="${movie.title}"></h1>
+                    <h1 v-text="movie.title"></h1>
                     <div class="col-md-2">
                         <div class="heading-and-data">
                             <div class="movie-details-heading">Release Year</div>
-                            <div th:text="${movie.releaseYear}"></div>
+                            <div v-text="movie.releaseYear"></div>
                         </div>
                         <div class="heading-and-data">
                             <div class="movie-details-heading">Links</div>
-                            <a target="_blank" th:href="@{|http://www.imdb.com/title/tt${movie.imdbId}|}">IMDB</a>
+                            <a target="_blank" :href="`http://www.imdb.com/title/tt${movie.imdbId}`">IMDB</a>
                             <span>
-                                <a target="_blank" th:href="@{|http://www.themoviedb.org/movie/${movie.tmdbId}|}">TMDB</a>
+                                <a target="_blank" :href="`http://www.themoviedb.org/movie/${movie.tmdbId}`">TMDB</a>
                             </span>
                         </div>
                     </div>
@@ -39,13 +43,9 @@
                             </div>
                         </div>
                         <div class="heading-and-data">
-                            <div class="movie-details-heading">Average of <span th:text="${movie.ratingNumber}"></span> Ratings</div>
+                            <div class="movie-details-heading">Average of <span style="color:rgba(255,255,255,0.7);">{{ movie.ratingNumber | ratingNumberFormat }}</span> Ratings</div>
                             <div class="rating-or-prediction predicted">
-                                <svg xmlns:xlink="http://www.w3.org/1999/xlink" class="star-icon" height="14px" version="1.1" viewbox="0 0 14 14" width="14px" xmlns="http://www.w3.org/2000/svg">
-                                    <defs></defs>
-                                    <polygon fill-rule="evenodd" points="13.7714286 5.4939887 9.22142857 4.89188383 7.27142857 0.790044361 5.32142857 4.89188383 0.771428571 5.4939887 4.11428571 8.56096041 3.25071429 13.0202996 7.27142857 10.8282616 11.2921429 13.0202996 10.4285714 8.56096041" stroke="none">></polygon>
-                                </svg>
-                                <div class="rating-value"><span class="movie-details-rating"  th:text="${#numbers.formatDecimal(movie.averageRating, 1, 2)}"></span> / 5.0</div>
+                                <el-rate v-model="averageRating" disabled show-score score-template="{value}" text-color="#f5c518" :colors="colors"></el-rate>
                             </div>
                         </div>
                     </div>
@@ -53,9 +53,24 @@
                         <div class="heading-and-data">
                             <div class="movie-details-heading">Genres</div>
                             <div class="genres-chip-list">
-                                <a class="genres-chip genres-chip__layout" th:each="Genre:${movie.genres}" th:href="@{|/collection/${Genre}|}">
-                                    <span class="genres-chip__text" role="presentation" th:text="${Genre}"></span>
+                                <a class="genres-chip genres-chip__layout" v-for="(genre, index) in movie.genres" :key="genre" :href="`/collection/${genre}`">
+                                    <span class="genres-chip__text" role="presentation" v-text="genre"></span>
                                 </a>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 另起一行，评分功能 -->
+                    <div class="col-md-offset-2 col-md-7">
+                        <div class="heading-and-data">
+                            <div class="rating-function-heading">{{ ratingTips }}</div>
+                            <div class="rating-or-prediction rating-function">
+                                <!--<el-rate v-model="userRating" :icon-classes="iconClasses" void-icon-class="icon-rate-face-off" :colors="colors"></el-rate>-->
+                                <el-rate v-model="ratingValue" allow-half :icon-classes="iconClasses" void-icon-class="icon-rate-face-off" text-color="#f5c518" :colors="colors"></el-rate>
+                                <svg v-if="isRatingRequestHandling" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 50 50" style="enable-background:new 0 0 50 50;" xml:space="preserve">
+                                    <path fill="#f5c518" d="M25.251,6.461c-10.318,0-18.683,8.365-18.683,18.683h4.068c0-8.071,6.543-14.615,14.615-14.615V6.461z" transform="rotate(275.098 25 25)">
+                                        <animateTransform attributeType="xml" attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="0.6s" repeatCount="indefinite"></animateTransform>
+                                    </path>
+                                </svg>
                             </div>
                         </div>
                     </div>

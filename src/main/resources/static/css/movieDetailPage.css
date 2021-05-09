@@ -67,6 +67,10 @@
     border-radius: 1.5rem;
 }
 
+.el-image{
+    display: block !important;
+}
+
 .movie-details-poster img{
     height: 100%;
     width: 100%;
@@ -90,6 +94,27 @@
 
 .heading-and-data a:hover{
     color:#f5c518;
+}
+
+.rating-function-heading{
+    color: rgb(87, 153, 239);
+    font-size:26px;
+    display: flex;
+    justify-content: center;
+}
+
+.rating-function{
+    height: 28px;
+    display: flex;
+    justify-content: center;
+}
+
+.rating-function .el-rate__icon{
+    font-size: 28px !important;
+}
+
+.rating-function .el-rate__text{
+    font-size: 18px !important;
 }
 
 /* 与首页中的电影卡片排列是不同的策略,display:inline-block => block,使推荐的电影块状堆叠 */

@@ -1,13 +1,18 @@
 package com.penistrong.CinemaChainPlatform.online.controller;
 
 import com.penistrong.CinemaChainPlatform.online.model.Movie;
+import com.penistrong.CinemaChainPlatform.online.model.Rating;
 import com.penistrong.CinemaChainPlatform.online.model.SimilarityMethod;
 import com.penistrong.CinemaChainPlatform.online.service.MovieService;
+import com.penistrong.CinemaChainPlatform.online.service.RatingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpSession;
+import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -18,12 +23,21 @@ public class MovieDetailPageController {
     @Autowired
     private MovieService movieService;
 
+    @Autowired
+    private RatingService ratingService;
+
     @GetMapping("/{movieId}")
     public String MovieDetailPage(@PathVariable int movieId, Model model){
         Movie movie = movieService.getMovieFromDataManager(movieId);
         model.addAttribute("movie", movie);
         //已改为Vue懒加载，因为要计算相似度，可能会有延迟
         return "movieDetail";
+    }
+
+    @PostMapping("/{movieId}")
+    @ResponseBody
+    public Movie getMovieDetail(@PathVariable int movieId){
+        return movieService.getMovieFromDataManager(movieId);
     }
 
     //用于前后端分离，异步加载相似电影
@@ -39,5 +53,59 @@ public class MovieDetailPageController {
     public List<Movie> getSimilarMovieRecList(@PathVariable int movieId,
                                               @RequestBody Map<String, String> requestBody){
         return movieService.getSimilarMovieRecList(movieId, Integer.parseInt(requestBody.get("size")), SimilarityMethod.Embedding);
+    }
+
+    /**
+     * 获取当前用户对给定电影的评分，如果没有则返回null
+     * @param session Session取登录用户信息
+     * @param movieId 电影ID
+     * @return
+     */
+    @PostMapping("/{movieId}/getUserRatingValue")
+    @ResponseBody
+    public Map<String, String> getUserRatingValue(HttpSession session, @PathVariable int movieId){
+        Map<String, String> res = new HashMap<>();
+        String userId = (String) session.getAttribute("userId");
+        if(userId == null || userId.isEmpty()){  //没登录就是默认null值
+            res.put("status", "failed");
+        } else{
+            //用户已登录
+            Float ratingValue = this.ratingService.getUserRatingValue(Integer.parseInt(userId), movieId);
+            if(ratingValue != -1f) {
+                res.put("status", "success");
+                res.put("ratingValue", String.valueOf(ratingValue));
+            }
+            else{  //该用户没有对该电影进行过评分
+                res.put("status", "failed");
+            }
+        }
+        return res;
+    }
+
+    /**
+     * 给电影评价的接口，前端视情况进行API请求频率限制(使用lodash即可)
+     * ContentType:application/x-www-form-urlencoded,所以是传统"?param_name=value"的方式来传参的,这里使用@RequestParam接收
+     * @param movieId 待评分的电影Id
+     * @param ratingValue 评分值
+     * @return JSON数据，包含状态和错误提示
+     */
+    @PostMapping("/{movieId}/rateMovie")
+    @ResponseBody
+    public Map<String, String> rateMovie(HttpSession session, @PathVariable int movieId, @RequestParam(value = "ratingValue") Float ratingValue){
+        Map<String, String> res = new HashMap<>();
+        String userId = (String) session.getAttribute("userId");
+        if(userId == null || userId.isEmpty()){
+            res.put("status", "failed");
+            res.put("error_msg", "Please log in first");
+        } else{
+            //用户已登录,注意timestamp是自UNIX元年的秒数而非毫秒数要除以1000
+            if(this.ratingService.saveOrUpdateUserRating(new Rating(Integer.parseInt(userId), movieId, ratingValue, System.currentTimeMillis() / 1000)))
+                res.put("status", "success");
+            else{
+                res.put("status", "failed");
+                res.put("error_msg", "Could not rate movie!");
+            }
+        }
+        return res;
     }
 }
