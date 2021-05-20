@@ -106,7 +106,6 @@ def trainItem2vec(spark, samples, embLength, embOutputPath, redisKeyPrefix, save
     word2vec = Word2Vec().setVectorSize(embLength).setWindowSize(5).setNumIterations(10)
     model = word2vec.fit(samples)
     # 调用封装好的函数寻找与某个item最相似的N个其它item
-    # 这里是用余弦相似度计算的相似性，其它相似性计算方法见我的另一篇博文
     synonyms = model.findSynonyms("592", 20)  # id"592"为蝙蝠侠Batman
     for synonym, cosineSimilarity in synonyms:
         print(synonym, cosineSimilarity)

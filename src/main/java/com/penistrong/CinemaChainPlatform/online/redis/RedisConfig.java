@@ -26,7 +26,8 @@ public class RedisConfig {
         final FastJsonRedisSerializer<?> fastJsonRedisSerializer = new FastJsonRedisSerializer<>(Object.class);
         //value采用FastJsonRedisSerializer
         template.setValueSerializer(fastJsonRedisSerializer);
-        template.setHashValueSerializer(fastJsonRedisSerializer);
+        //TODO:不知为何使用fastJson作为序列化器时，反序列化hashMap里的字符串报syntax error，这里替换为StringRedisSerializer试一试
+        template.setHashValueSerializer(new StringRedisSerializer());
         //key采用StringRedisSerializer
         template.setKeySerializer(new StringRedisSerializer());
         template.setHashKeySerializer(new StringRedisSerializer());

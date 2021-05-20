@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.penistrong.CinemaChainPlatform.online.datamanager.RatingListSerializer;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -50,6 +51,17 @@ public class Movie {
         this.topRatings = new ArrayList<>();
         this.emb = null;
         this.movieFeatures = null;
+    }
+    //暂时给MovieMapper的mybatis自动映射准备的构造函数
+    public Movie(int movieId, String title, int releaseYear, String genres){
+        this.movieId = movieId;
+        this.title = title;
+        this.releaseYear = releaseYear;
+        this.genres = new ArrayList<>();
+        if (!genres.trim().isEmpty())
+            Collections.addAll(this.genres, genres.split("\\|"));
+        ratingNumber = 0;
+        averageRating = 0;
     }
 
     public int getMovieId() {

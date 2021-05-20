@@ -21,14 +21,15 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
     public void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()
                 .antMatchers( "/druid/**",
-                        "/user/login/**",
-                        "/user/register/**",
+                        //"/user/login/**",
+                        //"/user/register/**",
+                        "/user/**",
                         "/homepage/**",
                         "/movie/**",
                         "/collection/**",
                         "/watchlist/**").permitAll() //主页、电影详情页、电影分类页不登录均可访问
                 .antMatchers("/admin/**").hasRole("admin")
-                .antMatchers("/user/**").hasRole("user")
+                //.antMatchers("/user/**").hasRole("user")
                 .anyRequest().authenticated();
     }
 }

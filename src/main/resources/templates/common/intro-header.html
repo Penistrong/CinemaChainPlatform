@@ -1,7 +1,8 @@
 <html lang="zh-cn" xmlns="http://www.w3.org/1999/html" xmlns:th="http://www.thymeleaf.org">
 
+<!-- 可选参数为customBG，可以不在参数中先声明，直接传值 -->
 <header th:fragment="intro-header(title, description)" class="intro-header"
-        style="background-image: url('/img/home-bg.jpg')">
+        th:style="'background-image:url(\'' + ${ customBG ?: '/img/home-bg.jpg' } +'\')'">
     <div class="container">
         <div class="row">
             <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
@@ -26,5 +27,7 @@
         </div>
     </div>
 </header>
+
+
 
 </html>

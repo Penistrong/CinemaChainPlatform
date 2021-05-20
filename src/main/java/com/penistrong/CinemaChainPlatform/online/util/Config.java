@@ -6,7 +6,7 @@ public class Config {
 
     public static String EMB_DATA_SOURCE = Config.DATA_SOURCE_REDIS;
     public static boolean IS_LOAD_USER_FEATURE_FROM_REDIS = true;
-    public static boolean IS_LOAD_ITEM_FEATURE_FROM_REDIS = false;
+    public static boolean IS_LOAD_ITEM_FEATURE_FROM_REDIS = true;
 
     public static boolean IS_ENABLE_AB_TEST = false;
 
@@ -15,4 +15,8 @@ public class Config {
     public static final String MOVIE_GRAPH_EMBEDDING_PREFIX_IN_REDIS = "graphEmb:";
     public static final String MOVIE_FEATURE_PREFIX_IN_REDIS = "mf:";
     public static final String USER_FEATURE_PREFIX_IN_REDIS = "uf:";
+
+    //Tensorflow/Serving RESTful API
+    public static final String TF_SERVING_NEURAL_CF_ENDPOINT = "http://66.42.66.135:8501/v1/models/NeuralCF:predict";
+    public static final String TF_SERVING_DIN_ENDPOINT = "http://66.42.66.135:8501/v1/models/DIN:predict";
 }

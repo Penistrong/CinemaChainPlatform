@@ -1,9 +1,14 @@
 package com.penistrong.CinemaChainPlatform.online.serviceImpl;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.penistrong.CinemaChainPlatform.online.datamanager.DataManager;
 import com.penistrong.CinemaChainPlatform.online.mapper.MovieMapper;
 import com.penistrong.CinemaChainPlatform.online.model.*;
 import com.penistrong.CinemaChainPlatform.online.service.MovieService;
+import static com.penistrong.CinemaChainPlatform.online.util.HttpAPIcaller.asyncSinglePostRequest;
+
+import com.penistrong.CinemaChainPlatform.online.util.Config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -85,7 +90,23 @@ public class MovieServiceImpl implements MovieService {
         return this.movieMapper.deleteMovieFromWatchList(userId, movieId) > 0;
     }
 
+    @Override
+    public boolean removeWatchList(int userId) {
+        return this.movieMapper.removeAllFromWatchList(userId) > 0;
+    }
+
+    @Override
+    public List<Movie> getWatchList(Integer userId, Integer size) {
+        List<Movie> watchList = this.movieMapper.getWatchListByUserId(userId, size);
+        //由于数据库尚未存储所有电影的所有信息，所以拿到MovieList后再根据属性不全的对象使用DataManager单例拿到完整对象
+        watchList = watchList.stream()
+                .map(movie -> DataManager.getInstance().getMovieById(movie.getMovieId()))
+                .collect(Collectors.toList());
+        return watchList;
+    }
+
     /**
+     * 朴实的单路召回，写在这但不用
      * generate candidates for similar movies recommendation
      * @param movie input movie object
      * @return recommended movie candidates
@@ -227,6 +248,9 @@ public class MovieServiceImpl implements MovieService {
         }
         //allCandidates.forEach(candidate -> movieScoreMap.put(candidate, candidate.getEmb().calculateSimilarity(userEmbedding)));
 
+        //移除用于计算的源电影
+        movieScoreMap.remove(movie);
+
         //使用Stream对Map按值降序排序
         movieScoreMap = movieScoreMap.entrySet().stream()
                 .sorted(Map.Entry.<Movie, Double>comparingByValue().reversed())
@@ -240,5 +264,4 @@ public class MovieServiceImpl implements MovieService {
                 );
         return new ArrayList<>(movieScoreMap.keySet()).subList(0, Math.min(movieScoreMap.size(), size));
     }
-
 }

@@ -16,7 +16,11 @@ public interface MovieService {
 
     Map<Integer, Boolean> queryIsInWatchList(int userId, List<Integer> movieIdList);
 
+    List<Movie> getWatchList(Integer userId, Integer size);
+
     boolean addWatchList(int userId, int movieId);
 
     boolean delWatchList(int userId, int movieId);
+
+    boolean removeWatchList(int userId);
 }

@@ -45,14 +45,18 @@ public class DataManager {
 
     //Load data from local file including movie, rating, link data and model data like Embedding vectors.
     public void loadData(String movieDataPath, String linkDataPath, String ratingDataPath, String movieEmbPath, String userEmbPath, String movieRedisKey, String userRedisKey) throws Exception{
+        //加载电影基本信息
         loadMovieData(movieDataPath);
+        //加载电影在IMDB和TMDB的链接ID
         loadLinkData(linkDataPath);
+        //加载评分信息
         loadRatingData(ratingDataPath);
+        //从Redis加载电影的Embedding
         loadMovieEmb(movieEmbPath, movieRedisKey);
-        if (Config.IS_LOAD_ITEM_FEATURE_FROM_REDIS){
+        //从Redis加载电影的Features
+        if (Config.IS_LOAD_ITEM_FEATURE_FROM_REDIS)
             loadMovieFeatures(Config.MOVIE_FEATURE_PREFIX_IN_REDIS);
-        }
-
+        //从Redis加载用户的Embedding
         loadUserEmb(userEmbPath, userRedisKey);
     }
 
@@ -251,6 +255,8 @@ public class DataManager {
     }
 
     //load user embedding
+    //由于数据集中的用户比较多，如果从Redis一次性将所有用户的Embedding加载出来有失偏颇，目前的考虑是建立一个活跃用户视图，只加载活跃用户的
+    //非活跃用户线上临时拉取即可
     private void loadUserEmb(String userEmbPath, String embKey) throws Exception{
         //2021.04.14 暂时都从文件系统中读取，redis中还没有userEmb
         if (Config.EMB_DATA_SOURCE.equals(Config.DATA_SOURCE_FILE) || Config.EMB_DATA_SOURCE.equals(Config.DATA_SOURCE_REDIS)) {

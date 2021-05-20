@@ -261,6 +261,9 @@ def splitAndSaveTraingTestSamples(samplesWithMixedFeature: DataFrame, file_path:
         # Split training and test dataset by 8:2
         training, test = samplesWithMixedFeature.randomSplit(weights=(0.8, 0.2))
     else:
+        '''
+        使用离线评估策略的时间切割法，按照时间划分训练集与测试集
+        '''
         smallSamples = samplesWithMixedFeatures.sample(0.1).withColumn("timestampLong", F.col("timestamp").cast(LongType()))
         # 使用Spark求分位数的方法，在timestampLong这列上求所有时间戳中位于80%位置的分位数
         quantile = smallSamples.stat.approxQuantile(col="timestampLong", probabilities=[0.8], relativeError=0.05)

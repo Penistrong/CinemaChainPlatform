@@ -97,7 +97,7 @@ var watchListRibbon = {
         },
     },
     template: `
-        <div class="watchlist-ribbon watchlist-ribbon__inWatchList" v-if="movie.isInWatchList" @click="movie.watchListLoading===false && handleDelWatchList($event)">
+        <div class="watchlist-ribbon watchlist-ribbon__inWatchList" v-if="movie.isInWatchList" @click="movie.watchListLoading===false && handleDelWatchList($event)" title="Remove from watchlist">
             <svg class="watchlist-ribbon__bg" width="24px" height="34px" viewBox="0 0 24 34" xmlns="http://www.w3.org/2000/svg" role="presentation">
                 <polygon class="watchlist-ribbon__bg-ribbon" fill="#000000" points="24 0 0 0 0 32 12.2436611 26.2926049 24 31.7728343"></polygon>
                 <polygon class="watchlist-ribbon__bg-hover" points="24 0 0 0 0 32 12.2436611 26.2926049 24 31.7728343"></polygon>
@@ -115,7 +115,7 @@ var watchListRibbon = {
                 </svg>
             </div>
         </div>
-        <div class="watchlist-ribbon" v-else @click="movie.watchListLoading===false && handleAddWatchList($event)">
+        <div class="watchlist-ribbon" v-else @click="movie.watchListLoading===false && handleAddWatchList($event)" title="Add into watchlist">
             <svg class="watchlist-ribbon__bg" width="24px" height="34px" viewBox="0 0 24 34" xmlns="http://www.w3.org/2000/svg" role="presentation">
                 <polygon class="watchlist-ribbon__bg-ribbon" fill="#000000" points="24 0 0 0 0 32 12.2436611 26.2926049 24 31.7728343"></polygon>
                 <polygon class="watchlist-ribbon__bg-hover" points="24 0 0 0 0 32 12.2436611 26.2926049 24 31.7728343"></polygon>

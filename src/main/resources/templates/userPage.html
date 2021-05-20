@@ -1,10 +1,235 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
+<html lang="zh-CN" xmlns="http://www.w3.org/1999/html" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="common/head :: header(title=${user.username} + ' | Profile', customPage='userPage')"></head>
+
 <body>
+    <nav th:replace="common/nav :: navbar"></nav>
+
+    <header th:replace="common/intro-header :: intro-header(title=${user.username}, description='Welcome back!')"></header>
+
+    <input style="display: none" id="userIdContainer" th:value="${user.userId}">
+    <div class="container" id="vue_load_user_info">
+        <div class="row">
+            <!-- Widget Container -->
+            <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12 widget-container">
+                <!-- Hack from IMDB -->
+                <div class="widgets">
+                    <div class="widget ratings">
+                        <div class="ratings poster-list">
+                            <h2 th:text="${isSelfVisited ? 'Your':'His'} + ' Ratings'"></h2>
+                            <h4>Most Recently Rated</h4>
+                            <div class="rating-list items">
+                                <div v-for="rating in ratingsList" :key="rating.movieId" class="item">
+                                    <a :href="`/movie/${rating.movieId}`">
+                                        <span>
+                                            <div class="poster">
+                                                <img :src="`/posters/${rating.movieId}.jpg`" width="105px" height="153px"/>
+                                            </div>
+                                        </span>
+                                    </a>
+                                    <div class="title">
+                                        <a :href="`/movie/${rating.movieId}`"></a>
+                                    </div>
+                                    <div class="sub-item">
+                                        <div class="rating-or-prediction predicted">
+                                            <svg xmlns:xlink="http://www.w3.org/1999/xlink" class="star-icon" height="14px" version="1.1" viewbox="0 0 14 14" width="14px" xmlns="http://www.w3.org/2000/svg">
+                                                <defs></defs>
+                                                <polygon fill-rule="evenodd" points="13.7714286 5.4939887 9.22142857 4.89188383 7.27142857 0.790044361 5.32142857 4.89188383 0.771428571 5.4939887 4.11428571 8.56096041 3.25071429 13.0202996 7.27142857 10.8282616 11.2921429 13.0202996 10.4285714 8.56096041" stroke="none">></polygon>
+                                            </svg>
+                                            <div class="rating-value"> {{ rating.score }} </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="widget watchlist">
+                        <h2 th:text="${isSelfVisited ? 'Your':'His'} + ' WatchList'"></h2>
+                        <div v-if="watchList.length == 0" style="color:wheat">
+                            The watchList is empty...Go to find more interesting things to watch!
+                            <a th:href="@{/homepage}" target="_blank">Explore Now!</a>
+                        </div>
+                        <div class="movie-row" v-else>
+                            <div class="movie-row-bounds">
+                                <div class="movie-row-scrollable" style="margin-left: 0">
+                                    <div v-for="movie in watchList" :key="movie.movieId" class="movie-row-item" style="margin-right: 5px">
+                                        <div class="movie-card-smart">
+                                            <div class="movie-card-md1">
+                                                <div class="movie-card-md1">
+                                                    <div class="card">
+                                                        <watchlist-ribbon v-bind:movie.sync="movie"></watchlist-ribbon>
+                                                        <div class="link-or-emit">
+                                                            <a :href="`/movie/${movie.movieId}`">
+                                                    <span>
+                                                        <div class="poster">
+                                                            <img :src="`/posters/${movie.movieId}.jpg`"/>
+                                                        </div>
+                                                    </span>
+                                                            </a>
+                                                        </div>
+                                                        <div class="overlay">
+                                                            <div class="above-fold">
+                                                                <div class="link-or-emit">
+                                                                    <a :href="'/movie/' + movie.movieId">
+                                                                        <span><p class="title">{{ movie.title }}</p></span>
+                                                                    </a>
+                                                                </div>
+                                                                <div class="rating-indicator">
+                                                                    <div class="ml4-rating-or-prediction">
+                                                                        <div class="rating-or-prediction predicted">
+                                                                            <svg xmlns:xlink="http://www.w3.org/1999/xlink" class="star-icon" height="14px" version="1.1" viewbox="0 0 14 14" width="14px" xmlns="http://www.w3.org/2000/svg">
+                                                                                <defs></defs>
+                                                                                <polygon fill="#f5c518" fill-rule="evenodd" points="13.7714286 5.4939887 9.22142857 4.89188383 7.27142857 0.790044361 5.32142857 4.89188383 0.771428571 5.4939887 4.11428571 8.56096041 3.25071429 13.0202996 7.27142857 10.8282616 11.2921429 13.0202996 10.4285714 8.56096041" stroke="none">></polygon>
+                                                                            </svg>
+                                                                            <div class="rating-value"> {{ movie.averageRating | ratingFormat }} </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <p class="releaseYear">{{ movie.releaseYear }}</p>
+                                                            </div>
+                                                            <div class="below-fold">
+                                                                <div class="genre-list">
+                                                                    <div class="genre" v-for="subGenre in movie.genres">
+                                                                        <a :href="`/collection/${subGenre}`">{{ subGenre }}</a>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="ratings-display">
+                                                                    <div class="rating-average">
+                                                                        <span class="rating-large">{{ movie.averageRating | ratingFormat }}</span>
+                                                                        <span class="rating-total">/5</span>
+                                                                        <p class="rating-caption">{{ movie.ratingNumber }} ratings</p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="clearfix"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Sidebar Container -->
+            <div class="col-lg-3 col-md-3col-sm-12 col-xs-12 sidebar-container">
+                <section class="visible-md visible-lg">
+                    <hr>
+                    <h5 th:text="'ABOUT '+${isSelfVisited ? 'ME' : 'HIM'}"></h5>
+                    <div class="short-about">
+                        <el-avatar :size="50" icon="el-icon-user-solid"></el-avatar>
+                        <p th:text="${user.username}"></p>
+                    </div>
+                    <hr>
+                    <h5>ANALYSIS</h5>
+                    <ul>
+                        <li th:text="'Rating Count: ' + ${user.ratingCount}"></li>
+                        <li th:text="'Average Rating Score: ' + ${user.averageRating}"></li>
+                    </ul>
+                </section>
+            </div>
+            <!-- Recommended Movie -->
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 ">
+                <div class="frontpage-section-top">
+                    <div class="explore-header frontpage-section-header">
+                        <a class="plain-link genre-title genre-title-link-wrapper" title="Recommend List">
+                            <h3 class="genre-title__text">
+                                <span th:text="'Recommend for ' + ${isSelfVisited ? 'You': 'Him'}"></span>
+                                <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" class="ipc-icon ipc-icon--chevron-right-inline genre-link-icon--inline genre-title-link-chevron" viewBox="0 0 24 24" fill="currentColor" role="presentation">
+                                    <path d="M5.622.631A2.153 2.153 0 0 0 5 2.147c0 .568.224 1.113.622 1.515l8.249 8.34-8.25 8.34a2.16 2.16 0 0 0-.548 2.07c.196.74.768 1.317 1.499 1.515a2.104 2.104 0 0 0 2.048-.555l9.758-9.866a2.153 2.153 0 0 0 0-3.03L8.62.61C7.812-.207 6.45-.207 5.622.63z">
+                                    </path>
+                                </svg>
+                            </h3>
+                            <div class="genre-title__description">Get top N recommended movies by retrieval and rank layer using DNN model</div>
+                        </a>
+                    </div>
+                    <div class="movie-row">
+                        <div class="movie-row-bounds">
+                            <div class="movie-row-scrollable">
+                                <!-- Vue + Axios 加载推荐电影 -->
+                                <div id="vue_load_rec_list">
+                                    <div v-show="!isFirstPage" @click="prevPage" class="rec-list-page__arrow rec-list-pager rec-list-pager--visible rec-list-pager--left" role="presentation">
+                                        <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" class="rec-list-icon--inline rec-list-pager-icon" viewBox="0 0 24 24" fill="currentColor" role="presentation">
+                                            <path d="M18.378 23.369c.398-.402.622-.947.622-1.516 0-.568-.224-1.113-.622-1.515l-8.249-8.34 8.25-8.34a2.16 2.16 0 0 0 .548-2.07A2.132 2.132 0 0 0 17.428.073a2.104 2.104 0 0 0-2.048.555l-9.758 9.866A2.153 2.153 0 0 0 5 12.009c0 .568.224 1.114.622 1.515l9.758 9.866c.808.817 2.17.817 2.998-.021z"></path>
+                                        </svg>
+                                    </div>
+
+                                    <transition-group name="flip-list" tag="div">
+                                        <!-- key一定要设置为与遍历中的某元素的独立ID，否则(比如使用遍历时自动产生的index)会导致无法识别 -->
+                                        <div v-for="(movie, index) in curShowingList" :key="movie.movieId" class="movie-row-item flip-list-item" style="margin-right: 5px">
+                                            <div class="movie-card-smart">
+                                                <div class="movie-card-md1">
+                                                    <div class="card">
+                                                        <watchlist-ribbon v-bind:movie.sync="movie"></watchlist-ribbon>
+                                                        <div class="link-or-emit">
+                                                            <a :href="`/movie/${movie.movieId}`">
+                                                    <span>
+                                                        <div class="poster">
+                                                            <img :src="`/posters/${movie.movieId}.jpg`"/>
+                                                        </div>
+                                                    </span>
+                                                            </a>
+                                                        </div>
+                                                        <div class="overlay">
+                                                            <div class="above-fold">
+                                                                <div class="link-or-emit">
+                                                                    <a :href="'/movie/' + movie.movieId"><span><p class="title"> {{ movie.title }} </p></span></a>
+                                                                </div>
+                                                                <div class="rating-indicator">
+                                                                    <div class="ml4-rating-or-prediction">
+                                                                        <div class="rating-or-prediction predicted">
+                                                                            <svg xmlns:xlink="http://www.w3.org/1999/xlink" class="star-icon" height="14px" version="1.1" viewbox="0 0 14 14" width="14px" xmlns="http://www.w3.org/2000/svg">
+                                                                                <defs></defs>
+                                                                                <polygon fill-rule="evenodd" points="13.7714286 5.4939887 9.22142857 4.89188383 7.27142857 0.790044361 5.32142857 4.89188383 0.771428571 5.4939887 4.11428571 8.56096041 3.25071429 13.0202996 7.27142857 10.8282616 11.2921429 13.0202996 10.4285714 8.56096041" stroke="none">></polygon>
+                                                                            </svg>
+                                                                            <div class="rating-value"> {{ movie.averageRating | ratingFormat }} </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <p class="releaseYear">{{ movie.releaseYear }}</p>
+                                                            </div>
+                                                            <div class="below-fold">
+                                                                <div class="genre-list">
+                                                                    <div class="genre" v-for="subGenre in movie.genres">
+                                                                        <a :href="`/collection/${subGenre}`">{{ subGenre }}</a>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="ratings-display">
+                                                                    <div class="rating-average">
+                                                                        <span class="rating-large">{{ movie.averageRating | ratingFormat }}</span>
+                                                                        <span class="rating-total">/5</span>
+                                                                        <p class="rating-caption">{{ movie.ratingNumber }} ratings</p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </transition-group>
+
+                                    <div v-show="!isLastPage"  @click="nextPage" class="rec-list-page__arrow rec-list-pager rec-list-pager--visible rec-list-pager--right" role="presentation">
+                                        <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" class="rec-list-icon--inline rec-list-pager-icon" viewBox="0 0 24 24" fill="currentColor" role="presentation">
+                                            <path d="M5.622.631A2.153 2.153 0 0 0 5 2.147c0 .568.224 1.113.622 1.515l8.249 8.34-8.25 8.34a2.16 2.16 0 0 0-.548 2.07c.196.74.768 1.317 1.499 1.515a2.104 2.104 0 0 0 2.048-.555l9.758-9.866a2.153 2.153 0 0 0 0-3.03L8.62.61C7.812-.207 6.45-.207 5.622.63z"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer th:replace="common/footer::footer"></footer>
 
 </body>
 </html>

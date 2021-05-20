@@ -2,12 +2,16 @@ package com.penistrong.CinemaChainPlatform.online.controller;
 
 import com.penistrong.CinemaChainPlatform.online.model.DNNmodel;
 import com.penistrong.CinemaChainPlatform.online.model.Movie;
+import com.penistrong.CinemaChainPlatform.online.model.Rating;
 import com.penistrong.CinemaChainPlatform.online.model.User;
 import com.penistrong.CinemaChainPlatform.online.service.UserService;
+import com.penistrong.CinemaChainPlatform.online.util.ABTest;
+import com.penistrong.CinemaChainPlatform.online.util.Config;
 import org.mybatis.logging.Logger;
 import org.mybatis.logging.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -99,12 +103,30 @@ public class UserController {
         return result;
     }
 
+    @GetMapping("/{userId}")
+    public String getUserPage(@PathVariable Integer userId, HttpSession session, Model model){
+        //将访问的用户的相关信息放入Model中,这部分就不使用Vue异步拉取了,直接服务器端Thymeleaf渲染
+        model.addAttribute("user", this.userService.getUser(userId));
+        model.addAttribute("isSelfVisited", false);
+        //检查当前登录用户是否访问的是自己的用户页面，根据情况开放相关设置等
+        String rawUserId = (String) session.getAttribute("userId");
+        if(rawUserId != null && !rawUserId.isEmpty())
+            //都不为空时,检查请求的用户页面和登录用户是否为同一页面
+            if(userId == Integer.parseInt(rawUserId))
+                model.addAttribute("isSelfVisited", true);
+        return "userPage";
+    }
+
     //为你推荐
+    //使用A/B测试获取用户所在的桶
     @PostMapping("/{userId}/getUserRecList")
     @ResponseBody
     public List<Movie> getUserRecList(@PathVariable Integer userId,
-                                      @RequestBody Map<String, String> requestBody){
-        return userService.getUserRecList(userId, Integer.parseInt(requestBody.get("size")), DNNmodel.NeuralCF);
+                                      @RequestParam(name="size", defaultValue = "10")Integer size){
+        if(Config.IS_ENABLE_AB_TEST)
+            return userService.getUserRecList(userId, size, ABTest.getBucketByUserId(String.valueOf(userId)));
+        else
+            return userService.getUserRecList(userId, size, DNNmodel.DIN);
     }
 
     //添加电影至待看列表
@@ -160,6 +182,13 @@ public class UserController {
             res.put("error_msg", "Could not remove watch list");
         }
         return res;
+    }
+
+    //获取用户的评分历史
+    @PostMapping("/{userId}/getRatingsList")
+    @ResponseBody
+    public List<Rating> getRatingsList(@PathVariable Integer userId, @RequestParam(name = "size", defaultValue = "5")Integer size){
+        return this.userService.getRatingsList(userId, size);
     }
 
 }

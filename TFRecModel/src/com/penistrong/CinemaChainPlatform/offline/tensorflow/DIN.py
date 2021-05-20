@@ -162,8 +162,14 @@ activation_unit = tf.keras.layers.Permute((2, 1))(activation_unit)
 # 将得到的注意力权重同原历史行为物品的Embedding再进行一次元素乘，准备输入到Sum Pooling层中
 activation_unit = tf.keras.layers.Multiply()([user_behaviors_emb_layer, activation_unit])
 
-# Sum Pooling层,就是向量各维度叠加,可以使用tf.keras.layers.Add
-# 使用Lambda将自定义的函数封装为Layer对象
+# Sum Pooling层
+# axis ∈ [-rank(input_tensor), rank(input_tensor))
+# 使用Lambda将自定义的函数封装为Layer对象,自定义函数使用keras.backend里的sum函数,设定axis=1沿着第一个轴相加
+# 比如[[1,2,3], [3,2,1]]这个2X3的矩阵(2阶张量),the result is [1,3]+[2,2]+[3,1] = [6,6](即列向量相加)
+# 如果axis=0，则是行向量相加;注意axis=-2和axis=0效果相同,axis=-1和axis=1效果相同(对该二阶张量而言)
+# 注意不能使用tf.keras.layers.Add
+# ValueError: A merge layer should be called on a list of inputs.
+# 因为Add是把不同层作为输入而逐元素叠加
 sum_pooling = tf.keras.layers.Lambda(lambda x: tf.keras.backend.sum(x, axis=1))(activation_unit)
 
 # FC layer 全连接层
@@ -219,7 +225,6 @@ tf.keras.models.save_model(
     signatures=None,
     options=None
 )
-
 
 def plot_learning_curves(history):
     pd.DataFrame(history.history).plot(figsize=(8, 5))

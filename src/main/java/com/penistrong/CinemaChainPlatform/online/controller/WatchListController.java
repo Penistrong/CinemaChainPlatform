@@ -1,5 +1,6 @@
 package com.penistrong.CinemaChainPlatform.online.controller;
 
+import com.penistrong.CinemaChainPlatform.online.model.Movie;
 import com.penistrong.CinemaChainPlatform.online.service.MovieService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpRequest;
@@ -18,6 +19,13 @@ public class WatchListController {
 
     @Autowired
     private MovieService movieService;
+
+    @PostMapping("/getWatchList")
+    @ResponseBody
+    public List<Movie> getWatchList(@RequestParam(name = "userId")Integer userId,
+                                    @RequestParam(name = "size", defaultValue = "5")Integer size){
+        return this.movieService.getWatchList(userId, size);
+    }
 
     /**
      * 根据传入的电影ID列表，找出其是否在当前session用户的待看列表中
@@ -96,4 +104,20 @@ public class WatchListController {
         }
         return res;
     }
+
+    //清空待看列表
+    @PostMapping("/removeWatchList")
+    @ResponseBody
+    public Map<String, String> removeWatchList(HttpSession session){
+        Map<String, String> res = new HashMap<>();
+        String userId = (String) session.getAttribute("userId");
+        if(this.movieService.removeWatchList(Integer.parseInt(userId))){
+            res.put("status", "success");
+        }else{
+            res.put("status", "failed");
+            res.put("error_msg", "Could not remove watch list");
+        }
+        return res;
+    }
+
 }

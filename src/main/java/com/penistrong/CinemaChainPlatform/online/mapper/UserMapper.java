@@ -1,10 +1,13 @@
 package com.penistrong.CinemaChainPlatform.online.mapper;
 
+import com.penistrong.CinemaChainPlatform.online.model.Rating;
 import com.penistrong.CinemaChainPlatform.online.model.User;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
+
+import java.util.List;
 
 /**
  * 用于OAuth2实现登录验证用户信息，用户携带Token访问平台
@@ -23,6 +26,9 @@ public interface UserMapper {
     @Select("SELECT * FROM users WHERE username=#{username} AND password=#{password}")
     User selectUser(String username, String password);
 
+    @Select("SELECT * FROM users WHERE userId=#{userId}")
+    User selectUserById(Integer userId);
+
     //user_id列已设置自增
     @Insert("INSERT INTO users(username, password, enabled) VALUES(#{username}, #{password}, 1)")
     Integer createUser(String username, String password);
@@ -39,4 +45,7 @@ public interface UserMapper {
 
     @Delete("DELETE FROM watchlist WHERE userId=#{userId}")
     Integer removeWatchList(Integer userId);
+
+    @Select("SELECT * FROM ratings WHERE userId=#{userId} ORDER BY timestamp DESC LIMIT #{size}")
+    List<Rating> selectRatingsByUserId(Integer userId, Integer size);
 }

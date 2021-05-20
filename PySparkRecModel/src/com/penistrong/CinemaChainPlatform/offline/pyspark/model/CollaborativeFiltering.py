@@ -58,7 +58,7 @@ def CollaborativeFiltering(spark, sampleDataPath):
     # 展示ALS模型的物品隐向量和用户隐向量，可以将这两者当做Item Embedding与User Embedding进行处理
     model.itemFactors.show(10, truncate=False)
     model.userFactors.show(10, truncate=False)
-    # 使用Spark的回归评估器进行评估,metricName选择rmse
+    # 使用Spark的回归评估器进行评估,metricName选择rmse(Root Mean Square Error, 均方根误差)
     evaluator = RegressionEvaluator(predictionCol="prediction", labelCol="ratingFloat", metricName='rmse')
     rmse = evaluator.evaluate(predictions)
     # 打印结果
@@ -80,6 +80,10 @@ def CollaborativeFiltering(spark, sampleDataPath):
     recListForMovieSubset.show(5, truncate=False)
 
     paramGrid = ParamGridBuilder().addGrid(als.regParam, [0.01]).build()
+    # 使用离线评估策略的交叉验证
+    # 将全部样本划分为k个大小相等的样本子集，依次遍历这k个子集，将每次遍历到的子集作为验证集，其余子集作为训练集
+    # 依次进行k次模型的训练和评估，k通常取10
+    # 最后将这k次评估指标的平均值作为最终评估指标
     cv = CrossValidator(estimator=als, estimatorParamMaps=paramGrid, evaluator=evaluator, numFolds=10)
     cvModel = cv.fit(test_data)
     avgMetrics = cvModel.avgMetrics
