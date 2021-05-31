@@ -279,6 +279,7 @@ public class UserServiceImpl implements UserService {
         //包裹JSONArray
         JSONObject instanceRoot = new JSONObject();
         instanceRoot.put("instances", instances);
+        logger.info(instanceRoot.toString());
 
         //调用TF Serving API
         String predictionsScores = asyncSinglePostRequest(Config.TF_SERVING_DIN_ENDPOINT, instanceRoot.toString());
@@ -289,7 +290,6 @@ public class UserServiceImpl implements UserService {
         JSONArray scores = predictionsObject.getJSONArray("predictions");
         for(int i = 0;i < candidates.size();i++)
             candidateScoreMap.put(candidates.get(i), scores.getJSONArray(i).getDouble(0));
-
     }
 
     /*

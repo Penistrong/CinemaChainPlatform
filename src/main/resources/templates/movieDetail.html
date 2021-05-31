@@ -64,7 +64,6 @@
                         <div class="heading-and-data">
                             <div class="rating-function-heading">{{ ratingTips }}</div>
                             <div class="rating-or-prediction rating-function">
-                                <!--<el-rate v-model="userRating" :icon-classes="iconClasses" void-icon-class="icon-rate-face-off" :colors="colors"></el-rate>-->
                                 <el-rate v-model="ratingValue" allow-half :icon-classes="iconClasses" void-icon-class="icon-rate-face-off" text-color="#f5c518" :colors="colors"></el-rate>
                                 <svg v-if="isRatingRequestHandling" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 50 50" style="enable-background:new 0 0 50 50;" xml:space="preserve">
                                     <path fill="#f5c518" d="M25.251,6.461c-10.318,0-18.683,8.365-18.683,18.683h4.068c0-8.071,6.543-14.615,14.615-14.615V6.461z" transform="rotate(275.098 25 25)">

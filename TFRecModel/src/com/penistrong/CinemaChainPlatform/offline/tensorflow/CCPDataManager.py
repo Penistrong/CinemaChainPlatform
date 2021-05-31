@@ -10,6 +10,8 @@
 """
 
 import tensorflow as tf
+import matplotlib.pyplot as plt
+import pandas as pd
 
 
 class CCPDataManager:
@@ -40,4 +42,12 @@ class CCPDataManager:
         test_data = self.load_dataset(self.test_samples_file_path)
         return train_data, test_data
 
-
+    @staticmethod
+    def plot_learning_curves(history):
+        pd.DataFrame(history.history).plot(figsize=(8, 5))
+        plt.grid(ls='dotted')
+        # gca is Get Current Axes, set_ylim设置y轴显示的上下限，这里是学习曲线，肯定是在0~1之间
+        plt.gca().set_ylim(0, 1)
+        plt.title('History')
+        plt.xlabel('Epoch')
+        plt.show()

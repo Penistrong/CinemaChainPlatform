@@ -19,7 +19,7 @@ $(document).ready(function(){
         },
         created: function (){
             //使用Loadsh的_.debounce限制评分更新的执行频率
-            //设置500ms的间隔时间
+            //设置1000ms的间隔时间
             this.debouncedRateMovie = _.debounce(this.rateMovie, 1000);
             //获取评分历史记录
             //注意，由于要监听ratingValue值的变化，如果直接在watch里监听，这里初始化评分的时候会一并触发导致又更新了一次评分
@@ -76,9 +76,7 @@ $(document).ready(function(){
                         }
                         this.isRatingRequestHandling = false;
                     })
-                    .catch(error => {
-                        console.log(error);
-                    })
+                    .catch(error => { console.log(error) });
             }
         },
         filters: {

@@ -146,12 +146,11 @@ $(document).ready(function(){
                         //清空nameErrorMsg，以便回显后台信息
                         this.regRuleForm.nameErrorMsg = '';
                         if(r.data['status'] === 'success'){
-                            //TODO:显示注册成功并转向登录页面(并自动填写用户名与密码)
                             setTimeout(() => {
                                 this.ruleForm.username = this.regRuleForm.username;
                                 this.ruleForm.password = this.regRuleForm.password;
                                 //切换至登录标签页
-                                this.activeTab = "registerTab";
+                                this.activeTab = "loginTab";
                             }, 1000);
                         }else{
                             this.$nextTick(() => {

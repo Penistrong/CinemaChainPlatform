@@ -92,7 +92,11 @@ model.compile(
     metrics=['accuracy', tf.keras.metrics.AUC(curve='ROC'), tf.keras.metrics.AUC(curve='PR')])
 
 # train the model
-model.fit(train_data, epochs=5)
+history = model.fit(
+    train_data,
+    epochs=5,
+    batch_size=12
+)
 
 model.summary()
 
@@ -108,6 +112,7 @@ for prediction, goodRating in zip(predictions[:12], list(test_data)[0][1][:12]):
           " | Actual rating label: ",
           ("Good Rating" if bool(goodRating) else "Bad Rating"))
 
+'''
 # 保存模型，供tf_serving使用
 tf.keras.models.save_model(
     model,
@@ -118,3 +123,6 @@ tf.keras.models.save_model(
     signatures=None,
     options=None
 )
+'''
+
+CCPDataManager().plot_learning_curves(history)

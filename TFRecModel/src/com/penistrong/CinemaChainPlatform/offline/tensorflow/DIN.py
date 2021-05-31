@@ -12,8 +12,6 @@
 # here put the import lib
 import tensorflow as tf
 from CCPDataManager import CCPDataManager
-import matplotlib.pyplot as plt
-import pandas as pd
 
 """
 DIN引入了注意力机制，对于用户行为中的历史物品，它通过设计一个激活单元提取提取每个物品Embedding的注意力权重
@@ -197,9 +195,16 @@ model = tf.keras.Model(inputs, output_layer)
 model.compile(
     loss='binary_crossentropy',
     optimizer='adam',
-    metrics=['accuracy', tf.keras.metrics.AUC(curve='ROC'), tf.keras.metrics.AUC(curve='PR')])
+    metrics=['accuracy',
+             tf.keras.metrics.AUC(curve='ROC', name='ROC_AUC'),
+             tf.keras.metrics.AUC(curve='PR', name='PR_AUC')],
+)
 
-history = model.fit(train_data, epochs=5)
+history = model.fit(
+    train_data,
+    epochs=5,
+    batch_size=12  # if unspecified 'batch_size' will default to 32
+)
 
 model.summary()
 
@@ -215,6 +220,7 @@ for prediction, goodRating in zip(predictions[:12], list(test_data)[0][1][:12]):
           " | Actual rating label: ",
           ("Good Rating" if bool(goodRating) else "Bad Rating"))
 
+'''
 # 保存模型，供tf_serving使用
 tf.keras.models.save_model(
     model,
@@ -225,13 +231,6 @@ tf.keras.models.save_model(
     signatures=None,
     options=None
 )
+'''
 
-def plot_learning_curves(history):
-    pd.DataFrame(history.history).plot(figsize=(8, 5))
-    plt.grid(True)
-    # gca is Get Current Axes, set_ylim设置y轴显示的上下限，这里是学习曲线，肯定是在0~1之间
-    plt.gca().set_ylim(0, 1)
-    plt.show()
-
-
-plot_learning_curves(history)
+CCPDataManager().plot_learning_curves(history)

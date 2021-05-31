@@ -151,7 +151,10 @@ public class MovieServiceImpl implements MovieService {
         //使用JDK8的stream
         //以Entry中的值(这里是Double)进行比较，使用Comparator.reverseOrder()降序排列
         //最后将排序好的Entry里的键(Movie)依次放入rankedCandidates中
-        candidateSimilarityMap.entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.reverseOrder())).forEach(m -> rankedCandidates.add(m.getKey()));
+        candidateSimilarityMap.entrySet()
+                .stream()
+                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                .forEach(m -> rankedCandidates.add(m.getKey()));
         return rankedCandidates;
     }
 

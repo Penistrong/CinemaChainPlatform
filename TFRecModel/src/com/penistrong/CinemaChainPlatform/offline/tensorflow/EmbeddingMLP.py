@@ -11,35 +11,14 @@
 
 # here put the import lib
 import tensorflow as tf
+from CCPDataManager import CCPDataManager
+
+train_data, test_data = CCPDataManager().get_ccp_dataset()
 
 # TODO:基于MovieLens数据集的分片得到，若要使用原始数据集这里要进行更改!
+
 MOVIE_NUMS = 1000
 USER_NUMS = 30000
-
-training_samples_file_path = tf.keras.utils.get_file(fname="trainingSamples.csv",
-                                                     origin="file:///E:/workspace/CinemaChainPlatform/src/main/resources"
-                                                            "/resources/sampledata/trainingSamples.csv")
-
-test_samples_file_path = tf.keras.utils.get_file(fname="testSamples.csv",
-                                                 origin="file:///E:/workspace/CinemaChainPlatform/src/main/resources"
-                                                        "/resources/sampledata/testSamples.csv")
-
-
-# load samples.csv as tf dataset
-def load_dataset(dataset_path):
-    return tf.data.experimental.make_csv_dataset(
-        file_pattern=dataset_path,
-        batch_size=12,
-        label_name='label',
-        na_value="0",
-        num_epochs=1,
-        ignore_errors=True
-    )
-
-
-# Already used Spark to split train_data and test_data based on the original dataset
-train_data = load_dataset(training_samples_file_path)
-test_data = load_dataset(test_samples_file_path)
 
 # genre features vocabulary.Use Spark to solve with rawSamples to conclude all genres into genre_vocab
 genre_vocab = ['Film-Noir', 'Action', 'Adventure', 'Horror', 'Romance', 'War', 'Comedy', 'Western', 'Documentary',
@@ -122,7 +101,11 @@ model.compile(
 )
 
 # 训练模型
-model.fit(train_data, epochs=5)
+history = model.fit(
+    train_data,
+    epochs=5,
+    batch_size=12
+)
 
 # 模型概览
 model.summary()
@@ -138,3 +121,5 @@ for prediction, goodRating in zip(predictions[:12], list(test_data)[0][1][:12]):
     print("Predicted good rating: {:.2%}".format(prediction[0]),
           " | Actual rating label: ",
           ("Good Rating" if bool(goodRating) else "Bad Rating"))
+
+CCPDataManager().plot_learning_curves(history)

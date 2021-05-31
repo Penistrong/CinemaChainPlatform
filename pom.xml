@@ -15,6 +15,8 @@
 	<description>CinemaChainPlatform</description>
 	<properties>
 		<java.version>1.8</java.version>
+		<flink.version>1.11.1</flink.version>
+		<httpclient.version>4.5.13</httpclient.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -155,6 +157,33 @@
 			<version>${httpasyncclient.version}</version> <!-- 4.0.2 --> <!-- 4.1-beta1 -->
 		</dependency>
 
+		<!-- Flink Support -->
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-java</artifactId>
+			<version>${flink.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-streaming-java_2.11</artifactId>
+			<version>${flink.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-clients_2.11</artifactId>
+			<version>${flink.version}</version>
+		</dependency>
+		<!-- Up to 2021-05-25 flink-jdbc newest version is 1.10.3 -->
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-jdbc_2.11</artifactId>
+			<version>1.10.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-runtime-web_2.11</artifactId>
+			<version>${flink.version}</version>
+		</dependency>
 
 	</dependencies>
 

@@ -35,7 +35,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         return super.userDetailsService();
     }
 
-    //TODO:不使用inMemoryAuthentication,使用jdbcAuthentication
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         /*

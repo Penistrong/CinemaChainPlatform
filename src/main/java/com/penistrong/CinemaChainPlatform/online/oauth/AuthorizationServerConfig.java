@@ -96,7 +96,7 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
 
     @Override
     public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
-        //使用表单进行登录验证，包括client_id和client_secret
+        //使用表单进行权限验证，包括client_id和client_secret
         security.allowFormAuthenticationForClients();
     }
 }

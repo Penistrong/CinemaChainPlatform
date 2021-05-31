@@ -11,6 +11,7 @@
 
 # here put the import lib
 import tensorflow as tf
+from CCPDataManager import CCPDataManager
 
 """
 Google的Wide&Deep模型，Wide部分负责模型的记忆能力，Deep部分负责模型的泛化能力
@@ -18,35 +19,12 @@ Google的Wide&Deep模型，Wide部分负责模型的记忆能力，Deep部分负
 ②泛化能力:模型对于新样本及从未出现过的特征组合的预测能力,也是DNN模型在推荐系统中主要负责的部分
 """
 
+train_data, test_data = CCPDataManager().get_ccp_dataset()
+
 # 以下数据处理部分(包含类别型特征和数值型特征)与EmbeddingMLP中如出一辙
 # TODO:基于MovieLens数据集的分片得到，若要使用原始数据集这里要进行更改!
 MOVIE_NUMS = 1000
 USER_NUMS = 30000
-
-training_samples_file_path = tf.keras.utils.get_file(fname="trainingSamples.csv",
-                                                     origin="file:///E:/workspace/CinemaChainPlatform/src/main/resources"
-                                                            "/resources/sampledata/trainingSamples.csv")
-
-test_samples_file_path = tf.keras.utils.get_file(fname="testSamples.csv",
-                                                 origin="file:///E:/workspace/CinemaChainPlatform/src/main/resources"
-                                                        "/resources/sampledata/testSamples.csv")
-
-
-# load samples.csv as tf dataset
-def load_dataset(dataset_path):
-    return tf.data.experimental.make_csv_dataset(
-        file_pattern=dataset_path,
-        batch_size=12,
-        label_name='label',
-        na_value="0",
-        num_epochs=1,
-        ignore_errors=True
-    )
-
-
-# Already used Spark to split train_data and test_data based on the original dataset
-train_data = load_dataset(training_samples_file_path)
-test_data = load_dataset(test_samples_file_path)
 
 # genre features vocabulary.Use Spark to solve with rawSamples to conclude all genres into genre_vocab
 genre_vocab = ['Film-Noir', 'Action', 'Adventure', 'Horror', 'Romance', 'War', 'Comedy', 'Western', 'Documentary',
@@ -154,7 +132,11 @@ model.compile(
     optimizer='adam',
     metrics=['accuracy', tf.keras.metrics.AUC(curve='ROC'), tf.keras.metrics.AUC(curve='PR')])
 
-model.fit(train_data, epochs=5)
+history = model.fit(
+    train_data,
+    epochs=5,
+    batch_size=12
+)
 
 test_loss, test_accuracy, test_roc_auc, test_pr_auc = model.evaluate(test_data)
 print('\n\nTest Loss : {}\nTest Accuracy : {}\nTest ROC AUC : {}\nTest PR AUC : {}\n'.format(test_loss, test_accuracy,
@@ -166,3 +148,5 @@ for prediction, goodRating in zip(predictions[:12], list(test_data)[0][1][:12]):
     print("Predicted good rating: {:.2%}".format(prediction[0]),
           " | Actual rating label: ",
           ("Good Rating" if bool(goodRating) else "Bad Rating"))
+
+CCPDataManager().plot_learning_curves(history)
