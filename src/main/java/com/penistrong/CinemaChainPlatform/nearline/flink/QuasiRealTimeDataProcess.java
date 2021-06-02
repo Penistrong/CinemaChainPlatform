@@ -19,46 +19,19 @@ import org.apache.flink.types.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import javax.annotation.PostConstruct;
 import java.io.Serializable;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-
-//使用ratings.csv数据集中的格式模拟数据流环境，即新样本落盘至其内
-class Rating{
-    public String userId;           //column 1
-    public String movieId;          //column 2
-    public String rating;           //column 3
-    public String timestamp;        //column 4
-    public String latestMovieId;    //Repeat for Window Slide
-
-    public Rating(String line){
-        String[] lines = line.split(",");
-        this.userId = lines[0];
-        this.movieId = lines[1];
-        this.rating = lines[2];
-        this.timestamp = lines[3];
-        this.latestMovieId = lines[1];
-    }
-
-    public Rating(Row row){
-        this.userId = String.valueOf(row.getField(0));
-        this.movieId = String.valueOf(row.getField(1));
-        this.rating = String.valueOf(row.getField(2));
-        this.timestamp = String.valueOf(row.getField(3));
-        this.latestMovieId = this.movieId;
-    }
-}
 
 /**
  * 使用Flink完成准实时数据处理，将用户的行为历史记录落盘生成新的训练样本
  * 从数据库获取数据流，处理后生成训练样本下沉(sink)至Redis和离线训练样本集里
  */
-@Service
+@Configuration
+@EnableScheduling
 public class QuasiRealTimeDataProcess {
 
     @Value("${spring.datasource.url}")
@@ -73,25 +46,35 @@ public class QuasiRealTimeDataProcess {
     @Value("${spring.datasource.password}")
     private String password;
 
-    private static final Logger logger = LoggerFactory.getLogger(QuasiRealTimeDataProcess.class);
+    private long lastProcessTime;
 
     //被@PostConstruct修饰的方法会在服务器加载Servlet后运行，并且只会被服务器执行一次
     //服务器加载Servlet初始化顺序: Constructor => AutoWired => PostConstruct
     @PostConstruct
+    private void initLastProcessTime(){
+        this.lastProcessTime = System.currentTimeMillis() / 1000;
+    }
+
+    private static final Logger logger = LoggerFactory.getLogger(QuasiRealTimeDataProcess.class);
+
+    //每个整点执行一次新数据落盘，生成新的训练样本
+    @Scheduled(cron = "0 0 */1 * * *")
     public void processNewSample() throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        long currentProcessTime = System.currentTimeMillis() / 1000;
         //定义数据源 data stream source
         DataStreamSource<Row> dataSource = env.createInput(JDBCInputFormat.buildJDBCInputFormat()
                 .setDrivername(this.driverClassName)
                 .setDBUrl(this.dbUrl)
                 .setUsername(this.username)
                 .setPassword(this.password)
-                .setQuery("SELECT userId, movieId, score, timestamp FROM ratings WHERE timestamp < ?")
+                .setQuery("SELECT userId, movieId, score, timestamp FROM ratings WHERE timestamp BETWEEN ? AND ?")
                 .setParametersProvider(() -> {
-                    //使用当前系统时间戳作为唯一参数
-                    Serializable[][] queryParameters = new Serializable[1][1];
-                    String[] param = new String[1];
-                    param[0] = String.valueOf(System.currentTimeMillis() / 1000);
+                    //选取处于上次处理和本次处理时间范围内的用户评分行为
+                    Serializable[][] queryParameters = new Serializable[1][2];
+                    String[] param = new String[2];
+                    param[0] = String.valueOf(lastProcessTime);
+                    param[1] = String.valueOf(currentProcessTime);
                     queryParameters[0] = param;
                     return queryParameters;
                 })
@@ -104,7 +87,7 @@ public class QuasiRealTimeDataProcess {
         );
         //其次，定义数据转换操作 transformation
         //从元组Row解析成Rating类的数据流(测试后转换没有任何问题，都转换成了POJO)
-        DataStream<Rating> ratingDataStream = dataSource.map(Rating::new);
+        DataStream<RatingSample> ratingDataStream = dataSource.map(RatingSample::new);
         /*
         URL ratingResourcesPath = this.getClass().getResource("/resources/dataset/ratings.csv");
 

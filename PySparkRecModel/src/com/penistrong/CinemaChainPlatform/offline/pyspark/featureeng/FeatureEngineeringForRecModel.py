@@ -21,6 +21,10 @@ from pyspark.sql import SparkSession, DataFrame, Window
 from pyspark.sql import functions as F
 from pyspark.sql.types import *
 
+import findspark
+
+findspark.init()
+
 '''
 不使用numpy和tensorflow原生处理数据集，是因为在并行处理数据的能力上它们都不如Spark
 使用Spark进行数据清洗、预处理和特征提取，发挥Spark处理数据的长处
@@ -312,4 +316,4 @@ if __name__ == '__main__':
     extractAndSaveMovieFeaturesToRedis(samplesWithMixedFeatures)
 
     # 离线训练得到的混合特征样本分为训练集和测试集后存储到本地
-    splitAndSaveTraingTestSamples(samplesWithMixedFeatures, context_data_path + '/sampledata')
+    # splitAndSaveTraingTestSamples(samplesWithMixedFeatures, context_data_path + '/sampledata')

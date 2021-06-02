@@ -11,7 +11,10 @@ import com.penistrong.CinemaChainPlatform.online.util.Utility;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Response;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.*;
 
 /*
@@ -63,10 +66,14 @@ public class DataManager {
     //load movie data from movies.csv
     private void loadMovieData(String movieDataPath) throws Exception{
         System.out.println("Loading movie data from " + movieDataPath + " ...");
+        InputStream is = this.getClass().getClassLoader().getResourceAsStream("resources/dataset/movies.csv");
+        assert is != null;
+        BufferedReader bufReader = new BufferedReader(new InputStreamReader(is));
+        String movieRawData = "";
         boolean skipFirstLine = true;
-        try (Scanner scanner = new Scanner(new File(movieDataPath))) {
-            while (scanner.hasNextLine()) {
-                String movieRawData = scanner.nextLine();
+        //try (Scanner scanner = new Scanner(new File(movieDataPath))) {
+            while ((movieRawData = bufReader.readLine()) != null) {
+                //String movieRawData = scanner.nextLine();
                 if (skipFirstLine){
                     skipFirstLine = false;
                     continue;
@@ -92,7 +99,7 @@ public class DataManager {
                     }
                     this.movieMap.put(movie.getMovieId(), movie);
                 }
-            }
+            //}
         }
         System.out.println("Loading movie data completed. " + this.movieMap.size() + " movies in total.");
     }

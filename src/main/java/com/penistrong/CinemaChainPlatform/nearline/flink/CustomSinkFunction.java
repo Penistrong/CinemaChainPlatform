@@ -11,7 +11,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.stereotype.Component;
 
 @Component
-public class CustomSinkFunction extends RichSinkFunction<Rating> {
+public class CustomSinkFunction extends RichSinkFunction<RatingSample> {
     private static final Logger logger = LoggerFactory.getLogger(CustomSinkFunction.class);
 
     @Autowired
@@ -35,7 +35,7 @@ public class CustomSinkFunction extends RichSinkFunction<Rating> {
 
     //数据下沉时，插入每一条数据都会调用一次invoke()方法
     @Override
-    public void invoke(Rating value, Context context) throws Exception {
+    public void invoke(RatingSample value, Context context) throws Exception {
         logger.info("[Flink-QuasiRealTimeFeatureProcess] userId:" + value.userId +" latestMovieId:" + value.latestMovieId);
         //SinkFunction.super.invoke(value, context);
     }
